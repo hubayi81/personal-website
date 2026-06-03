@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}博客 | 胡嘉鑫{% endblock %}
+
+{% block extra_css %}
+<style>
+    .blog-hero {
+        padding: 8rem 2rem 2rem;
+        text-align: center;
+        max-width: 1200px; margin: 0 auto;
+    }
+    .blog-list {
+        max-width: 800px; margin: 0 auto;
+        padding: 0 2rem 6rem;
+        display: flex; flex-direction: column;
+        gap: 2rem;
+    }
+    .blog-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        transition: all var(--transition-smooth);
+    }
+    .blog-card:hover {
+        border-color: var(--border-hover);
+        transform: translateX(8px);
+        box-shadow: var(--shadow-card);
+    }
+    .blog-card-date {
+        font-size: 0.85rem; color: var(--text-muted);
+        font-family: var(--font-mono);
+        margin-bottom: 0.5rem;
+    }
+    .blog-card-title {
+        font-size: 1.4rem; font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    .blog-card-title a {
+        color: var(--text-primary);
+        transition: color var(--transition-fast);
+    }
+    .blog-card-title a:hover { color: var(--accent-cyan); }
+    .blog-card-summary {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+    .blog-card-tags {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .blog-card-tags span {
+        font-size: 0.75rem; padding: 0.2rem 0.7rem;
+        background: rgba(0, 210, 255, 0.1);
+        color: var(--accent-cyan);
+        border-radius: 100px;
+    }
+    .empty-state {
+        text-align: center; padding: 4rem 2rem;
+    }
+    .empty-state .empty-icon { font-size: 4rem; margin-bottom: 1rem; }
+    .empty-state p { color: var(--text-muted); font-size: 1.1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="blog-hero">
+    <h1 class="section-title reveal">📝 博客</h1>
+    <p class="section-subtitle reveal" style="margin: 0 auto;">记录学习过程和技术思考</p>
+</section>
+
+<div class="blog-list">
+    {% if posts %}
+        {% for post in posts %}
+        <article class="blog-card reveal-{% if loop.index is odd %}left{% else %}right{% endif %}">
+            <div class="blog-card-date">{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '' }}</div>
+            <h2 class="blog-card-title">
+                <a href="/blog/{{ post.slug }}">{{ post.title }}</a>
+            </h2>
+            <p class="blog-card-summary">{{ post.summary or (post.content or '')[:150] }}</p>
+            {% if post.tag_list %}
+            <div class="blog-card-tags">
+                {% for tag in post.tag_list %}
+                <span>{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </article>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state reveal">
+            <div class="empty-icon">📭</div>
+            <p>还没有文章，敬请期待！</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

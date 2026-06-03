@@ -1,0 +1,63 @@
+{% extends "admin/layout.html" %}
+{% block title %}{% if is_new %}新建项目{% else %}编辑项目{% endif %}{% endblock %}
+
+{% block admin_content %}
+<h2>{% if is_new %}➕ 新建项目{% else %}✏️ 编辑：{{ project.title }}{% endif %}</h2>
+
+<form class="admin-form" id="projectForm"
+      data-is-new="{{ is_new | lower }}"
+      data-id="{{ project.id if project else '' }}">
+    <div class="form-group">
+        <label>项目名称 *</label>
+        <input type="text" name="title" value="{{ project.title if project else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label>项目描述</label>
+        <textarea name="description" rows="6">{{ project.description if project else '' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>技术栈（JSON 数组格式，如 ["Python","FastAPI"]）</label>
+        <input type="text" name="tech_stack" value="{{ project.tech_stack if project else '[]' }}">
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>项目图片 URL</label>
+            <input type="text" name="image_url" value="{{ project.image_url if project else '' }}">
+        </div>
+        <div class="form-group">
+            <label>GitHub URL</label>
+            <input type="text" name="github_url" value="{{ project.github_url if project else '' }}">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>⭐ GitHub Star 数</label>
+            <input type="number" name="star_count" value="{{ project.star_count if project else 0 }}" min="0">
+        </div>
+        <div class="form-group">
+            <label>👥 用户/下载量</label>
+            <input type="number" name="user_count" value="{{ project.user_count if project else 0 }}" min="0">
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>在线演示 URL</label>
+            <input type="text" name="live_url" value="{{ project.live_url if project else '' }}" placeholder="https://your-demo.com">
+        </div>
+        <div class="form-group">
+            <label>排序权重（越大越靠前）</label>
+            <input type="number" name="sort_order" value="{{ project.sort_order if project else 0 }}">
+        </div>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" name="featured" id="featured" {% if project and project.featured %}checked{% endif %}>
+        <label for="featured">首页精选展示</label>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if is_new %}创建项目{% else %}保存修改{% endif %}
+        </button>
+        <a href="/admin/projects" class="btn btn-outline">取消</a>
+    </div>
+</form>
+{% endblock %}

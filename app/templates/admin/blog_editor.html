@@ -1,0 +1,43 @@
+{% extends "admin/layout.html" %}
+{% block title %}{% if is_new %}写博客{% else %}编辑博客{% endif %}{% endblock %}
+
+{% block admin_content %}
+<h2>{% if is_new %}✍️ 写博客{% else %}✏️ 编辑：{{ post.title }}{% endif %}</h2>
+
+<form class="admin-form" id="blogForm"
+      data-is-new="{{ is_new | lower }}"
+      data-id="{{ post.id if post else '' }}">
+    <div class="form-group">
+        <label>标题 *</label>
+        <input type="text" name="title" value="{{ post.title if post else '' }}" required>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>URL Slug *（如 "my-first-post"，用作链接）</label>
+            <input type="text" name="slug" value="{{ post.slug if post else '' }}" required>
+        </div>
+        <div class="form-group">
+            <label>标签（JSON 数组，如 ["Python","Docker"]）</label>
+            <input type="text" name="tags" value="{{ post.tags if post else '[]' }}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>摘要</label>
+        <input type="text" name="summary" value="{{ post.summary if post else '' }}" placeholder="简短描述这篇文章...">
+    </div>
+    <div class="form-group">
+        <label>正文（Markdown 格式）</label>
+        <textarea name="content" rows="20" placeholder="支持 Markdown 语法：## 标题、**粗体**、```代码块```、- 列表等">{{ post.content if post else '' }}</textarea>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" name="published" id="published" {% if post and post.published %}checked{% endif %}>
+        <label for="published">公开发布</label>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if is_new %}发布文章{% else %}保存修改{% endif %}
+        </button>
+        <a href="/admin/blogs" class="btn btn-outline">取消</a>
+    </div>
+</form>
+{% endblock %}

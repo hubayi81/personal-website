@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}胡嘉鑫 | AI 应用开发者{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* 首页 Hero */
+    .hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+    }
+
+    #starfield {
+        position: absolute; top: 0; left: 0;
+        width: 100%; height: 100%;
+        z-index: 0;
+    }
+
+    .hero-content {
+        position: relative; z-index: 1;
+        text-align: center;
+        max-width: 800px; padding: 2rem;
+    }
+
+    .hero-greeting {
+        font-size: 1.2rem; color: var(--accent-cyan);
+        margin-bottom: 0.5rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+    }
+
+    .hero-name {
+        font-size: 4rem; font-weight: 900;
+        background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-purple) 50%, var(--accent-cyan) 100%);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .hero-role {
+        font-size: 1.5rem; color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    #typewriter {
+        color: var(--accent-gold);
+        font-family: var(--font-mono);
+        font-size: 1.1rem;
+        min-height: 2rem;
+    }
+    #typewriter::after {
+        content: '|';
+        animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+        50% { opacity: 0; }
+    }
+
+    .hero-buttons {
+        display: flex; gap: 1rem; justify-content: center;
+        margin-top: 2.5rem;
+        flex-wrap: wrap;
+    }
+
+    .scroll-hint {
+        position: absolute; bottom: 2rem; left: 50%;
+        transform: translateX(-50%);
+        display: flex; flex-direction: column; align-items: center;
+        gap: 0.5rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        z-index: 1;
+    }
+    .scroll-arrow {
+        width: 24px; height: 24px;
+        border-right: 2px solid var(--accent-purple);
+        border-bottom: 2px solid var(--accent-purple);
+        transform: rotate(45deg);
+        animation: scrollBounce 2s ease-in-out infinite;
+    }
+    @keyframes scrollBounce {
+        0%, 100% { transform: rotate(45deg) translate(0, 0); opacity: 0.4; }
+        50% { transform: rotate(45deg) translate(6px, 6px); opacity: 1; }
+    }
+
+    /* 鼠标光晕 */
+    .mouse-glow {
+        position: fixed; top: 0; left: 0;
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(108, 92, 231, 0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 0;
+        transform: translate(-50%, -50%);
+    }
+
+    /* 精选项目预览 */
+    .featured-section {
+        padding: 6rem 2rem;
+        max-width: 1200px; margin: 0 auto;
+    }
+
+    .featured-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .project-card-preview {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.8rem;
+        transition: all var(--transition-smooth);
+        position: relative; overflow: hidden;
+    }
+    .project-card-preview:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-card);
+    }
+    .project-card-preview h3 {
+        font-size: 1.3rem; margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    .project-card-preview p {
+        color: var(--text-secondary); font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+    .tech-tags {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .tech-tag {
+        font-size: 0.75rem; padding: 0.2rem 0.7rem;
+        background: rgba(108, 92, 231, 0.15);
+        color: var(--accent-cyan);
+        border-radius: 100px;
+        font-family: var(--font-mono);
+    }
+
+    .view-all {
+        text-align: center; margin-top: 2.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .hero-name { font-size: 2.5rem; }
+        .hero-role { font-size: 1.1rem; }
+        .featured-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="mouse-glow" id="mouseGlow"></div>
+
+<section class="hero">
+    <canvas id="starfield"></canvas>
+
+    <div class="hero-content">
+        <p class="hero-greeting reveal">👋 Hi，我是</p>
+        <h1 class="hero-name reveal">胡嘉鑫</h1>
+        <p class="hero-role reveal">AI 应用开发者 / CS 在读</p>
+        <p id="typewriter" class="reveal"></p>
+        <div class="hero-buttons reveal">
+            <a href="/projects" class="btn btn-primary">🚀 我的项目</a>
+            <a href="/about" class="btn btn-outline">👤 关于我</a>
+            <a href="/blog" class="btn btn-outline">📝 博客</a>
+        </div>
+    </div>
+
+    <div class="scroll-hint">
+        <span>向下滚动</span>
+        <div class="scroll-arrow"></div>
+    </div>
+</section>
+
+{% if projects %}
+<section class="featured-section">
+    <h2 class="section-title reveal">精选项目</h2>
+    <p class="section-subtitle reveal">这些是我最近在做的项目</p>
+    <div class="featured-grid">
+        {% for p in projects %}
+        <div class="project-card-preview reveal-scale" data-tilt data-tilt-max="5" data-tilt-speed="400">
+            <h3>{{ p.title }}</h3>
+            <p>{{ (p.description or '')[:120] }}{% if p.description and p.description|length > 120 %}...{% endif %}</p>
+            {% if p.tech_stack %}
+            <div class="tech-tags">
+                {% for tech in (p.tech_list or [])[:4] %}
+                <span class="tech-tag">{{ tech }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    <div class="view-all">
+        <a href="/projects" class="btn btn-outline">查看全部项目 →</a>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+<script src="/static/js/home.js"></script>
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% block title %}关于我 | hubayi81{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        padding: 8rem 2rem 2rem;
+        text-align: center;
+        max-width: 1200px; margin: 0 auto;
+    }
+
+    .about-grid {
+        display: grid; grid-template-columns: 1fr 1.5fr;
+        gap: 3rem; max-width: 1200px; margin: 0 auto;
+        padding: 0 2rem 4rem;
+    }
+
+    .about-avatar {
+        width: 180px; height: 180px;
+        border-radius: 50%;
+        border: 3px solid var(--accent-purple);
+        box-shadow: var(--shadow-glow-purple);
+        margin: 0 auto 1.5rem;
+        background: var(--bg-card);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 4rem;
+    }
+
+    .info-item {
+        display: flex; align-items: center; gap: 0.8rem;
+        margin-bottom: 1rem;
+        color: var(--text-secondary);
+    }
+    .info-icon { font-size: 1.3rem; width: 28px; }
+
+    /* 社区数据卡片 */
+    .community-stats {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        max-width: 900px; margin: 0 auto 4rem;
+        padding: 0 2rem;
+    }
+    .stat-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        text-align: center;
+        transition: all var(--transition-smooth);
+    }
+    .stat-card:hover {
+        border-color: var(--border-hover);
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-card);
+    }
+    .stat-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .stat-value {
+        font-size: 2.2rem; font-weight: 900;
+        background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    .stat-label { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.2rem; }
+    .stat-sub { color: var(--text-muted); font-size: 0.7rem; }
+
+    /* 技能进度条 */
+    .skill-item { margin-bottom: 1.5rem; }
+    .skill-header {
+        display: flex; justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: var(--text-secondary);
+    }
+    .skill-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    .skill-fill {
+        height: 100%;
+        border-radius: 4px;
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+        width: 0;
+        transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 时间线 */
+    .timeline-section {
+        max-width: 800px; margin: 0 auto;
+        padding: 0 2rem 6rem;
+    }
+    .timeline {
+        position: relative;
+        padding: 2rem 0;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute; left: 50%; top: 0; bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, transparent, var(--accent-purple), var(--accent-cyan), transparent);
+    }
+
+    .timeline-item {
+        position: relative;
+        width: 43%;
+        margin-bottom: 2.5rem;
+    }
+    .timeline-item:nth-child(odd) {
+        margin-right: auto;
+        text-align: right;
+        padding-right: 3rem;
+    }
+    .timeline-item:nth-child(even) {
+        margin-left: auto;
+        text-align: left;
+        padding-left: 3rem;
+    }
+    .timeline-dot {
+        position: absolute; top: 0;
+        width: 16px; height: 16px;
+        background: var(--accent-purple);
+        border-radius: 50%;
+        border: 3px solid var(--bg-primary);
+        box-shadow: var(--shadow-glow-purple);
+    }
+    .timeline-item:nth-child(odd) .timeline-dot { right: -10px; }
+    .timeline-item:nth-child(even) .timeline-dot { left: -10px; }
+    .timeline-item.cyan-dot .timeline-dot { background: var(--accent-cyan); box-shadow: var(--shadow-glow-cyan); }
+    .timeline-item.gold-dot .timeline-dot { background: var(--accent-gold); box-shadow: 0 0 20px rgba(255,215,0,0.3); }
+
+    .timeline-date {
+        font-size: 0.85rem; color: var(--accent-cyan);
+        font-family: var(--font-mono); margin-bottom: 0.3rem;
+    }
+    .timeline-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .timeline-desc { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; }
+    .timeline-badge {
+        display: inline-block;
+        font-size: 0.7rem; padding: 0.15rem 0.6rem;
+        border-radius: 100px;
+        margin-top: 0.4rem;
+    }
+    .badge-achievement { background: rgba(255,215,0,0.15); color: var(--accent-gold); }
+    .badge-tech { background: rgba(0,210,255,0.15); color: var(--accent-cyan); }
+    .badge-learn { background: rgba(108,92,231,0.15); color: var(--accent-purple); }
+
+    .section-divider {
+        max-width: 1200px; margin: 0 auto; padding: 0 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .about-grid { grid-template-columns: 1fr; }
+        .community-stats { grid-template-columns: repeat(3, 1fr); }
+        .stat-value { font-size: 1.5rem; }
+        .timeline::before { left: 0; }
+        .timeline-item { width: 100%; padding-left: 2rem !important; text-align: left !important; margin-left: 0 !important; }
+        .timeline-item:nth-child(odd) .timeline-dot, .timeline-item:nth-child(even) .timeline-dot { left: -8px; right: auto; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="about-hero">
+    <h1 class="section-title reveal">关于我</h1>
+    <p class="section-subtitle reveal" style="margin: 0 auto;">计算机专业在读，热爱 AI 应用开发与开源</p>
+</section>
+
+<!-- 社区数据 -->
+<div class="community-stats">
+    <div class="stat-card reveal-scale">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-value" id="githubStars">--</div>
+        <div class="stat-label">GitHub Stars</div>
+        <div class="stat-sub">累计获得</div>
+    </div>
+    <div class="stat-card reveal-scale">
+        <div class="stat-icon">📦</div>
+        <div class="stat-value" id="githubRepos">--</div>
+        <div class="stat-label">开源仓库</div>
+        <div class="stat-sub">持续更新中</div>
+    </div>
+    <div class="stat-card reveal-scale">
+        <div class="stat-icon">👥</div>
+        <div class="stat-value" id="githubFollowers">--</div>
+        <div class="stat-label">Followers</div>
+        <div class="stat-sub">GitHub 社区</div>
+    </div>
+</div>
+
+<div class="about-grid">
+    <!-- 左侧：基本信息 -->
+    <div>
+        <div class="about-avatar reveal">🧑‍💻</div>
+        <div class="glass-card reveal" style="padding: 2rem;">
+            <div class="info-item"><span class="info-icon">🎓</span> 计算机科学与技术 大二</div>
+            <div class="info-item"><span class="info-icon">📍</span> 中国 · 浙江</div>
+            <div class="info-item"><span class="info-icon">💡</span> AI 应用 / 后端开发 / 开源</div>
+            <div class="info-item"><span class="info-icon">🐙</span> github.com/hubayi81</div>
+            <div class="info-item"><span class="info-icon">📧</span> hubayi81@example.com</div>
+        </div>
+    </div>
+
+    <!-- 右侧：技能 -->
+    <div>
+        <h3 class="reveal" style="font-size:1.5rem; margin-bottom:1.5rem; color:var(--accent-cyan);">🛠 技术能力</h3>
+        {% set skills = [
+            ('Python', 78), ('Java', 62), ('FastAPI / Flask', 68),
+            ('MySQL', 72), ('Docker', 58), ('HTML / CSS / JS', 55),
+            ('Git / GitHub', 70), ('AI / LLM 应用', 75), ('Linux / 运维', 50),
+        ] %}
+        {% for name, level in skills %}
+        <div class="skill-item reveal" data-skill="{{ level }}">
+            <div class="skill-header"><span>{{ name }}</span><span>{{ level }}%</span></div>
+            <div class="skill-bar"><div class="skill-fill" data-width="{{ level }}"></div></div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- 时间线里程碑 -->
+<div class="section-divider" style="margin-bottom: 2rem;">
+    <h2 class="section-title reveal">📅 里程碑</h2>
+    <p class="section-subtitle reveal">从入门到精通的成长轨迹</p>
+</div>
+
+<div class="timeline-section">
+    <div class="timeline">
+        {% set events = [
+            ('2026.06', '构建个人网站', '使用 FastAPI + Docker + Three.js 从零搭建全栈个人网站，集成星空特效、项目管理后台、博客系统', 'badge-tech'),
+            ('2026.04', 'AI 鞋类推荐助手', '开发基于 DeepSeek API 的智能鞋类商品推荐系统，实现自然语言理解 + 个性化推荐', 'badge-achievement'),
+            ('2026.01', 'LLM API 深度实践', '熟练掌握 LLM API 调用，包括 prompt engineering、多轮对话、function calling 等高级特性', 'badge-tech'),
+            ('2025.09', 'Docker & 云部署入门', '学习 Docker Compose 多容器编排，将项目部署到阿里云服务器', 'badge-learn'),
+            ('2025.06', 'MySQL 数据库实战', '从裸 SQL 到 SQLAlchemy ORM，掌握数据库设计、索引优化、事务管理', 'badge-learn'),
+            ('2025.03', '第一个 Python Web 项目', '用 Flask 写了第一个后端项目，理解了路由、模板、数据库的基本概念', 'badge-achievement'),
+            ('2024.09', '开始系统学习编程', '大二上学期，系统学习 Python + Java，开始接触算法与数据结构', 'badge-learn'),
+            ('2023.09', '进入大学', '计算机科学与技术专业，开启编程之旅', 'badge-learn'),
+        ] %}
+        {% for date, title, desc, badge in events %}
+        <div class="timeline-item reveal-{% if loop.index is odd %}left{% else %}right{% endif %} {% if loop.index <= 2 %}cyan-dot{% elif loop.index <= 5 %}purple-dot{% else %}gold-dot{% endif %}">
+            <div class="timeline-dot"></div>
+            <div class="timeline-date">{{ date }}</div>
+            <div class="timeline-title">{{ title }}</div>
+            <div class="timeline-desc">{{ desc }}</div>
+            <span class="timeline-badge {{ badge }}">
+                {% if badge == 'badge-achievement' %}🏆 项目{% elif badge == 'badge-tech' %}🔧 技术{% else %}📚 学习{% endif %}
+            </span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- GitHub Stats -->
+<div class="section-divider" style="margin-bottom: 2rem;">
+    <h2 class="section-title reveal">🐙 GitHub 贡献</h2>
+</div>
+
+<div style="max-width: 600px; margin: 0 auto; padding: 0 2rem 6rem; text-align: center;" class="reveal">
+    <img src="https://github-readme-stats.vercel.app/api?username=hubayi81&show_icons=true&theme=tokyonight&hide_border=true&bg_color=0a0a1a&title_color=6c5ce7&icon_color=00d2ff&text_color=e0e0ff" alt="GitHub Stats" style="max-width:100%; border-radius: var(--radius-lg); margin-bottom: 1rem;" onerror="this.style.display='none'">
+    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem;">数据实时同步自 GitHub</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// 从 GitHub API 获取真实数据
+(async function fetchGitHubStats() {
+    try {
+        const resp = await fetch('https://api.github.com/users/hubayi81');
+        if (!resp.ok) throw new Error('API limit');
+        const data = await resp.json();
+        document.getElementById('githubRepos').textContent = data.public_repos || '-';
+        document.getElementById('githubFollowers').textContent = data.followers || '-';
+
+        // 获取所有仓库的 star 总数
+        const reposResp = await fetch('https://api.github.com/users/hubayi81/repos?per_page=100');
+        if (reposResp.ok) {
+            const repos = await reposResp.json();
+            const totalStars = repos.reduce((sum, r) => sum + (r.stargazers_count || 0), 0);
+            document.getElementById('githubStars').textContent = totalStars;
+        }
+    } catch (e) {
+        // GitHub API 限流或网络问题，显示占位数据
+        document.getElementById('githubStars').textContent = '-';
+        document.getElementById('githubRepos').textContent = '-';
+        document.getElementById('githubFollowers').textContent = '-';
+    }
+})();
+</script>
+{% endblock %}

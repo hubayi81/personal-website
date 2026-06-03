@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}{{ project.title }} | 项目详情{% endblock %}
+
+{% block extra_css %}
+<style>
+    .project-detail-page {
+        max-width: 900px; margin: 0 auto;
+        padding: 8rem 2rem 4rem;
+    }
+
+    .back-link {
+        display: inline-flex; align-items: center; gap: 0.5rem;
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+        transition: color var(--transition-fast);
+    }
+    .back-link:hover { color: var(--accent-cyan); }
+
+    .project-hero {
+        margin-bottom: 2.5rem;
+    }
+    .project-detail-title {
+        font-size: 2.5rem; font-weight: 900;
+        background: linear-gradient(135deg, var(--text-primary), var(--accent-cyan));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.3;
+        margin-bottom: 1rem;
+    }
+
+    .project-meta {
+        display: flex; flex-wrap: wrap; gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .project-tech-tags {
+        display: flex; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .project-tech-tag {
+        font-size: 0.8rem; padding: 0.25rem 0.8rem;
+        background: rgba(108, 92, 231, 0.15);
+        color: var(--accent-cyan);
+        border-radius: 100px;
+        font-family: var(--font-mono);
+    }
+
+    .demo-banner {
+        background: linear-gradient(135deg, rgba(0, 210, 255, 0.1), rgba(108, 92, 231, 0.15));
+        border: 1px solid rgba(0, 210, 255, 0.3);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+    }
+    .demo-banner-left h3 {
+        font-size: 1.2rem; color: var(--accent-cyan);
+        margin-bottom: 0.3rem;
+    }
+    .demo-banner-left p {
+        color: var(--text-secondary); font-size: 0.9rem;
+    }
+    .demo-buttons { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    .project-description {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    .project-description h3 {
+        font-size: 1.3rem; margin-bottom: 1rem;
+        color: var(--accent-purple);
+    }
+    .project-description p {
+        color: var(--text-secondary);
+        line-height: 1.9;
+        font-size: 1.05rem;
+    }
+
+    .project-image {
+        width: 100%; border-radius: var(--radius-lg);
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+
+    .project-info-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    .info-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+    }
+    .info-card h4 { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+    .info-card .value { font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan); }
+
+    @media (max-width: 768px) {
+        .project-detail-title { font-size: 1.8rem; }
+        .project-info-grid { grid-template-columns: 1fr; }
+        .demo-banner { flex-direction: column; text-align: center; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<article class="project-detail-page">
+    <a href="/projects" class="back-link reveal">← 返回项目列表</a>
+
+    <header class="project-hero reveal">
+        <h1 class="project-detail-title">{{ project.title }}</h1>
+    </header>
+
+    {% if project.tech_list %}
+    <div class="project-tech-tags reveal" style="margin-bottom: 1.5rem;">
+        {% for tech in project.tech_list %}
+        <span class="project-tech-tag">{{ tech }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- 演示链接横幅 -->
+    {% if project.live_url or project.github_url %}
+    <div class="demo-banner reveal">
+        <div class="demo-banner-left">
+            <h3>{% if project.live_url %}🚀 在线体验{% else %}📂 源代码{% endif %}</h3>
+            <p>{% if project.live_url %}可直接访问的在线 Demo{% else %}在 GitHub 上查看源码{% endif %}</p>
+        </div>
+        <div class="demo-buttons">
+            {% if project.live_url %}
+            <a href="{{ project.live_url }}" target="_blank" rel="noopener" class="btn btn-primary">🌐 访问 Demo</a>
+            {% endif %}
+            {% if project.github_url %}
+            <a href="{{ project.github_url }}" target="_blank" rel="noopener" class="btn btn-outline">🔗 GitHub 仓库</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if project.image_url %}
+    <img src="{{ project.image_url }}" alt="{{ project.title }}" class="project-image reveal">
+    {% endif %}
+
+    <div class="project-description reveal">
+        <h3>📖 项目介绍</h3>
+        <p>{{ project.description or '暂无详细介绍。' }}</p>
+    </div>
+
+    {% if project.github_url %}
+    <div class="project-info-grid reveal">
+        <div class="info-card">
+            <h4>📅 创建时间</h4>
+            <div class="value" style="font-size: 1.1rem;">{{ project.created_at.strftime('%Y-%m-%d') if project.created_at else '-' }}</div>
+        </div>
+        <div class="info-card">
+            <h4>🔗 项目链接</h4>
+            <div class="value" style="font-size: 1rem;">
+                <a href="{{ project.github_url }}" target="_blank" rel="noopener">GitHub →</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="reveal">
+        <a href="/projects" class="btn btn-outline">← 返回项目列表</a>
+    </div>
+</article>
+{% endblock %}

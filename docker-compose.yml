@@ -1,0 +1,45 @@
+services:
+  # MySQL 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: personal_website_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-personal_website}
+      MYSQL_USER: ${MYSQL_USER:-website}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-website123}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI 应用
+  app:
+    build: .
+    container_name: personal_website_app
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-change-this-to-a-random-string}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-website}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-website123}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-personal_website}
+      DEBUG: "false"
+    ports:
+      - "8000:8000"
+
+volumes:
+  mysql_data:

@@ -1,0 +1,28 @@
+{% extends "admin/layout.html" %}
+{% block title %}仪表盘 | 管理后台{% endblock %}
+
+{% block admin_content %}
+<h2>📊 仪表盘</h2>
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <div class="stat-icon">🚀</div>
+        <div class="stat-value">{{ project_count }}</div>
+        <div class="stat-label">项目总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">📝</div>
+        <div class="stat-value">{{ blog_count }}</div>
+        <div class="stat-label">博客文章</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-value">{{ published_blog_count }}</div>
+        <div class="stat-label">已发布</div>
+    </div>
+</div>
+<div class="quick-actions">
+    <a href="/admin/projects/new" class="btn btn-primary">+ 新建项目</a>
+    <a href="/admin/blogs/new" class="btn btn-outline">+ 写博客</a>
+    <a href="/" class="btn btn-outline" target="_blank">🌐 查看网站</a>
+</div>
+{% endblock %}

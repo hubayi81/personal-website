@@ -1,0 +1,42 @@
+{% extends "admin/layout.html" %}
+{% block title %}博客管理{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h2>📝 博客管理</h2>
+    <a href="/admin/blogs/new" class="btn btn-primary">+ 写博客</a>
+</div>
+
+{% if posts %}
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>标题</th>
+            <th>Slug</th>
+            <th>状态</th>
+            <th>创建时间</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for p in posts %}
+        <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.title }}</td>
+            <td>{{ p.slug }}</td>
+            <td>{% if p.published %}✅ 已发布{% else %}📝 草稿{% endif %}</td>
+            <td>{{ p.created_at.strftime('%Y-%m-%d') if p.created_at else '-' }}</td>
+            <td class="table-actions">
+                <a href="/blog/{{ p.slug }}" target="_blank" class="btn-sm">👁 查看</a>
+                <a href="/admin/blogs/{{ p.id }}/edit" class="btn-sm">✏️ 编辑</a>
+                <button class="btn-sm btn-danger" onclick="deleteBlog({{ p.id }}, '{{ p.title }}')">🗑 删除</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: var(--text-muted);">还没有文章，点击右上角开始写作。</p>
+{% endif %}
+{% endblock %}

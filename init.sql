@@ -1,0 +1,44 @@
+-- 个人网站 MySQL 初始化脚本
+CREATE DATABASE IF NOT EXISTS personal_website CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE personal_website;
+
+-- 用户表
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 项目表
+CREATE TABLE IF NOT EXISTS projects (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    tech_stack TEXT COMMENT 'JSON 数组',
+    image_url VARCHAR(500) DEFAULT '',
+    github_url VARCHAR(500) DEFAULT '',
+    live_url VARCHAR(500) DEFAULT '',
+    featured BOOLEAN DEFAULT FALSE,
+    star_count INT DEFAULT 0,
+    user_count INT DEFAULT 0,
+    sort_order INT DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 博客文章表
+CREATE TABLE IF NOT EXISTS blog_posts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(300) NOT NULL,
+    slug VARCHAR(300) NOT NULL UNIQUE,
+    summary VARCHAR(500) DEFAULT '',
+    content LONGTEXT,
+    tags TEXT COMMENT 'JSON 数组',
+    published BOOLEAN DEFAULT FALSE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 插入默认管理员 (密码: admin123 → bcrypt hash)
+-- 实际密码哈希将在首次启动时由应用创建
