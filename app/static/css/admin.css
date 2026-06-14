@@ -2,44 +2,81 @@
    管理后台样式
    ========================================== */
 
-/* === 登录页 === */
+/* === 登录页 — 毛玻璃卡片 === */
 .login-page {
     min-height: 100vh;
     display: flex; align-items: center; justify-content: center;
     background: var(--gradient-main);
+    padding: 2rem;
 }
 
-.login-card {
-    width: 400px; max-width: 90%;
-    padding: 3rem 2rem;
+.login-glass-card {
+    width: 400px; max-width: 100%;
+    background: rgba(15, 15, 45, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-xl);
+    position: relative; overflow: hidden;
+}
+
+/* 旋转渐变光晕边框 */
+.login-card-glow {
+    position: absolute; top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(
+        from 0deg,
+        transparent,
+        rgba(108, 92, 231, 0.12),
+        rgba(0, 210, 255, 0.1),
+        rgba(255, 215, 0, 0.06),
+        transparent
+    );
+    animation: glowRotate 6s linear infinite;
+    pointer-events: none;
+}
+@keyframes glowRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.login-card-inner {
+    position: relative; z-index: 1;
+    padding: 2.5rem 2rem 2rem;
     text-align: center;
 }
 
-.login-header { margin-bottom: 2rem; }
-.login-star {
-    font-size: 3rem; color: var(--accent-gold);
-    animation: twinkle 2s ease-in-out infinite;
+.login-card-icon {
+    color: var(--accent-cyan); opacity: 0.6;
+    margin-bottom: 0.8rem;
 }
-.login-header h1 { font-size: 1.5rem; margin: 1rem 0 0.5rem; }
-.login-header p { color: var(--text-muted); font-size: 0.9rem; }
 
-.login-error {
-    background: rgba(255, 107, 157, 0.1);
-    border: 1px solid rgba(255, 107, 157, 0.3);
+.login-card-inner h1 {
+    font-size: 1.2rem; font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 1.8rem;
+    letter-spacing: 0.5px;
+}
+
+.login-error-msg {
+    background: rgba(255, 107, 157, 0.08);
+    border: 1px solid rgba(255, 107, 157, 0.2);
     color: var(--accent-pink);
-    padding: 0.8rem; border-radius: var(--radius-sm);
-    margin-bottom: 1rem; font-size: 0.9rem;
+    padding: 0.6rem 1rem; border-radius: var(--radius-sm);
+    margin-bottom: 1rem; font-size: 0.82rem;
 }
 
-.login-form .form-group { margin-bottom: 1.2rem; text-align: left; }
-.login-form .form-group label { display: block; margin-bottom: 0.3rem; color: var(--text-secondary); }
-.login-form .form-group input { width: 100%; }
+.login-glass-form {
+    text-align: left;
+}
 
-.back-home {
+.login-back {
     display: inline-block; margin-top: 1.5rem;
-    color: var(--text-muted); font-size: 0.9rem;
+    color: var(--text-muted); font-size: 0.85rem;
+    text-decoration: none;
+    transition: color var(--transition-fast);
 }
-.back-home:hover { color: var(--accent-cyan); }
+.login-back:hover { color: var(--accent-cyan); }
 
 /* === 后台布局 === */
 .admin-body { background: #0a0a18; }
@@ -59,6 +96,8 @@
 .admin-nav-links a { color: var(--text-secondary); font-size: 0.9rem; }
 .admin-nav-links a:hover { color: var(--accent-cyan); }
 .logout-btn { color: var(--accent-pink) !important; }
+
+.admin-nav-right { display: flex; align-items: center; gap: 1rem; }
 
 .admin-container {
     display: flex;
@@ -104,7 +143,7 @@
 
 /* === 仪表盘统计 === */
 .dashboard-stats {
-    display: grid; grid-template-columns: repeat(3, 1fr);
+    display: grid; grid-template-columns: repeat(4, 1fr);
     gap: 1.5rem; margin-bottom: 2rem;
 }
 .stat-card {
@@ -212,6 +251,38 @@
 .btn-danger { color: var(--accent-pink) !important; }
 .btn-danger:hover { border-color: var(--accent-pink); background: rgba(255, 107, 157, 0.1); }
 
+/* === 图片上传 === */
+.upload-area {
+    display: flex; gap: 1rem; align-items: flex-start;
+}
+.upload-preview {
+    width: 120px; height: 120px;
+    border-radius: var(--radius-md);
+    border: 2px dashed var(--border-color);
+    background-size: cover; background-position: center;
+    background-color: #0d0d1f;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: border-color var(--transition-fast);
+}
+.upload-preview.has-image { border-style: solid; border-color: var(--accent-cyan); }
+.upload-placeholder { font-size: 2.5rem; opacity: 0.3; }
+.upload-actions { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.upload-actions input[type="text"] {
+    width: 100%; padding: 0.6rem 0.8rem;
+    background: #0d0d1f; border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm); color: var(--text-primary);
+    font-size: 0.9rem; outline: none;
+}
+.upload-actions input[type="text"]:focus { border-color: var(--accent-purple); }
+.upload-btn {
+    align-self: flex-start;
+    cursor: pointer !important;
+}
+.upload-status {
+    font-size: 0.8rem; color: var(--accent-cyan);
+}
+
 /* === 响应式 === */
 @media (max-width: 768px) {
     .admin-container { flex-direction: column; }
@@ -223,7 +294,7 @@
     .admin-sidebar ul { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .admin-sidebar li { margin-bottom: 0; }
     .admin-main { padding: 1.5rem; }
-    .dashboard-stats { grid-template-columns: 1fr; }
+    .dashboard-stats { grid-template-columns: 1fr 1fr; }
     .admin-form .form-row { grid-template-columns: 1fr; }
     .admin-nav-links { font-size: 0.8rem; gap: 1rem; }
 }

@@ -11,12 +11,6 @@
         overflow: hidden;
     }
 
-    #starfield {
-        position: absolute; top: 0; left: 0;
-        width: 100%; height: 100%;
-        z-index: 0;
-    }
-
     .hero-content {
         position: relative; z-index: 1;
         text-align: center;
@@ -157,7 +151,6 @@
 <div class="mouse-glow" id="mouseGlow"></div>
 
 <section class="hero">
-    <canvas id="starfield"></canvas>
 
     <div class="hero-content">
         <p class="hero-greeting reveal">👋 Hi，我是</p>
@@ -204,7 +197,5 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
-<script src="/static/js/home.js"></script>
 {% endblock %}

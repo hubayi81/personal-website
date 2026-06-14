@@ -1,6 +1,37 @@
 /**
- * 管理后台 JS：项目/博客 CRUD 表单处理
+ * 管理后台 JS：项目/博客 CRUD 表单处理 + 图片上传
  */
+
+// === 图片上传通用函数 ===
+async function handleUpload(fileInput, urlInputId, previewId, statusId) {
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const statusEl = document.getElementById(statusId);
+    const previewEl = document.getElementById(previewId);
+    const urlInput = document.getElementById(urlInputId);
+
+    statusEl.textContent = '⏳ 上传中...';
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+        const resp = await fetch('/api/upload', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.success) {
+            urlInput.value = data.url;
+            previewEl.style.backgroundImage = `url('${data.url}')`;
+            previewEl.classList.add('has-image');
+            previewEl.querySelector('.upload-placeholder')?.remove();
+            statusEl.textContent = '✅ 上传成功';
+        } else {
+            statusEl.textContent = '❌ 上传失败';
+        }
+    } catch (err) {
+        statusEl.textContent = '❌ 网络错误';
+    }
+}
 
 // === 项目表单提交 ===
 const projectForm = document.getElementById('projectForm');
@@ -74,6 +105,47 @@ async function deleteBlog(id, title) {
 
     try {
         const resp = await fetch(`/api/blogs/${id}`, { method: 'DELETE' });
+        if (resp.ok) {
+            window.location.reload();
+        } else {
+            alert('删除失败');
+        }
+    } catch (err) {
+        alert('网络错误：' + err.message);
+    }
+}
+
+// === 奖项表单提交 ===
+const awardForm = document.getElementById('awardForm');
+if (awardForm) {
+    awardForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const isNew = awardForm.dataset.isNew === 'true';
+        const id = awardForm.dataset.id;
+        const formData = new FormData(awardForm);
+
+        const url = isNew ? '/api/awards' : `/api/awards/${id}`;
+        const method = isNew ? 'POST' : 'PUT';
+
+        try {
+            const resp = await fetch(url, { method, body: formData });
+            if (resp.ok) {
+                window.location.href = '/admin/awards';
+            } else {
+                alert('保存失败，请检查输入');
+            }
+        } catch (err) {
+            alert('网络错误：' + err.message);
+        }
+    });
+}
+
+// === 删除奖项 ===
+async function deleteAward(id, title) {
+    if (!confirm(`确定要删除「${title}」吗？此操作不可撤销。`)) return;
+
+    try {
+        const resp = await fetch(`/api/awards/${id}`, { method: 'DELETE' });
         if (resp.ok) {
             window.location.reload();
         } else {

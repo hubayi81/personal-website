@@ -107,3 +107,4 @@ if (navToggle && navLinks) {
         navLinks.classList.toggle('open');
     });
 }
+

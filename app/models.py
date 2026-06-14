@@ -43,3 +43,17 @@ class BlogPost(Base):
     published = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Award(Base):
+    __tablename__ = "awards"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    title = Column(String(300), nullable=False)
+    organization = Column(String(200), default="")
+    award_date = Column(String(50), default="")  # 如 "2025-12"
+    description = Column(Text, default="")
+    image_url = Column(String(500), default="")
+    sort_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

@@ -335,6 +335,7 @@ app.state.templates = templates
 
 # 静态文件
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/uploads", StaticFiles(directory="app/static/uploads"), name="uploads")
 
 # 注册路由
 app.include_router(pages.router)

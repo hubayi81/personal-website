@@ -19,10 +19,16 @@
         <div class="stat-value">{{ published_blog_count }}</div>
         <div class="stat-label">已发布</div>
     </div>
+    <div class="stat-card">
+        <div class="stat-icon">🏆</div>
+        <div class="stat-value">{{ award_count }}</div>
+        <div class="stat-label">奖项&证书</div>
+    </div>
 </div>
 <div class="quick-actions">
     <a href="/admin/projects/new" class="btn btn-primary">+ 新建项目</a>
     <a href="/admin/blogs/new" class="btn btn-outline">+ 写博客</a>
+    <a href="/admin/awards/new" class="btn btn-outline">+ 添加奖项</a>
     <a href="/" class="btn btn-outline" target="_blank">🌐 查看网站</a>
 </div>
 {% endblock %}

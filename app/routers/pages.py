@@ -3,7 +3,7 @@ import json
 from fastapi import APIRouter, Request, Depends
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Project, BlogPost
+from ..models import Project, BlogPost, Award
 from ..auth import login_required
 
 router = APIRouter()
@@ -131,4 +131,19 @@ async def contact(request: Request):
         "request": request,
         "logged_in": login_required(request),
         "page": "contact",
+    })
+
+
+@router.get("/awards")
+async def awards(request: Request, db: Session = Depends(get_db)):
+    all_awards = (
+        db.query(Award)
+        .order_by(Award.sort_order.desc(), Award.created_at.desc())
+        .all()
+    )
+    return request.app.state.templates.TemplateResponse("awards.html", {
+        "request": request,
+        "awards": all_awards,
+        "logged_in": login_required(request),
+        "page": "awards",
     })

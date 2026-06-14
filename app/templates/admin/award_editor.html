@@ -1,0 +1,62 @@
+{% extends "admin/layout.html" %}
+{% block title %}{% if is_new %}添加奖项{% else %}编辑奖项{% endif %}{% endblock %}
+
+{% block admin_content %}
+<h2>{% if is_new %}🏆 添加奖项 / 证书{% else %}✏️ 编辑：{{ award.title }}{% endif %}</h2>
+
+<form class="admin-form" id="awardForm"
+      data-is-new="{{ is_new | lower }}"
+      data-id="{{ award.id if award else '' }}">
+    <div class="form-group">
+        <label>奖项名称 *</label>
+        <input type="text" name="title" value="{{ award.title if award else '' }}" required
+               placeholder="如：全国大学生数学建模竞赛一等奖">
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>颁发机构</label>
+            <input type="text" name="organization" value="{{ award.organization if award else '' }}"
+                   placeholder="如：中国数学会">
+        </div>
+        <div class="form-group">
+            <label>获得日期</label>
+            <input type="text" name="award_date" value="{{ award.award_date if award else '' }}"
+                   placeholder="如：2025-12">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>描述说明</label>
+        <textarea name="description" rows="4" placeholder="简要描述这个奖项或证书...">{{ award.description if award else '' }}</textarea>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>证书图片</label>
+            <div class="upload-area" id="awardUpload">
+                <div class="upload-preview" id="awardPreview" style="{% if award and award.image_url %}background-image:url('{{ award.image_url }}'){% endif %}">
+                    {% if not award or not award.image_url %}
+                    <span class="upload-placeholder">📷</span>
+                    {% endif %}
+                </div>
+                <div class="upload-actions">
+                    <input type="text" name="image_url" id="awardImageUrl"
+                           value="{{ award.image_url if award else '' }}"
+                           placeholder="输入图片 URL 或点击上传">
+                    <button type="button" class="btn-sm upload-btn" onclick="document.getElementById('awardFileInput').click()">📁 本地上传</button>
+                    <input type="file" id="awardFileInput" accept="image/*" style="display:none" onchange="handleUpload(this, 'awardImageUrl', 'awardPreview', 'awardUploading')">
+                    <span class="upload-status" id="awardUploading"></span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>排序权重（越大越靠前）</label>
+            <input type="number" name="sort_order" value="{{ award.sort_order if award else 0 }}">
+        </div>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if is_new %}添加奖项{% else %}保存修改{% endif %}
+        </button>
+        <a href="/admin/awards" class="btn btn-outline">取消</a>
+    </div>
+</form>
+{% endblock %}

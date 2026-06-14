@@ -1,13 +1,17 @@
 """后台管理路由 + CRUD API"""
 import json
-from fastapi import APIRouter, Request, Form, Depends, HTTPException
+import os
+import uuid
+from fastapi import APIRouter, Request, Form, Depends, HTTPException, UploadFile, File
 from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Project, BlogPost
+from ..models import Project, BlogPost, Award
 from ..auth import get_current_user, login_required
 
 router = APIRouter()
+
+UPLOAD_DIR = os.path.join("app", "static", "uploads")
 
 
 # === 中间件简化为依赖函数 ===
@@ -16,6 +20,22 @@ async def require_admin(request: Request):
     if not login_required(request):
         return RedirectResponse(url="/admin/login", status_code=303)
     return None
+
+
+# ===== 文件上传 =====
+@router.post("/api/upload")
+async def upload_file(request: Request, file: UploadFile = File(...)):
+    _ = get_current_user(request)
+    # 生成唯一文件名
+    ext = os.path.splitext(file.filename or ".png")[1].lower()
+    if ext not in (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg"):
+        raise HTTPException(status_code=400, detail="不支持的图片格式")
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, unique_name)
+    content = await file.read()
+    with open(filepath, "wb") as f:
+        f.write(content)
+    return JSONResponse({"success": True, "url": f"/uploads/{unique_name}"})
 
 
 # ===== 仪表盘 =====
@@ -27,12 +47,14 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     project_count = db.query(Project).count()
     blog_count = db.query(BlogPost).count()
     published_blog_count = db.query(BlogPost).filter(BlogPost.published == True).count()
+    award_count = db.query(Award).count()
     return request.app.state.templates.TemplateResponse("admin/dashboard.html", {
         "request": request,
         "logged_in": True,
         "project_count": project_count,
         "blog_count": blog_count,
         "published_blog_count": published_blog_count,
+        "award_count": award_count,
     })
 
 
@@ -120,6 +142,112 @@ async def admin_blog_edit(request: Request, post_id: int, db: Session = Depends(
         "post": post,
         "is_new": False,
     })
+
+
+# ===== 奖项管理页面 =====
+@router.get("/admin/awards")
+async def admin_awards(request: Request, db: Session = Depends(get_db)):
+    redirect = await require_admin(request)
+    if redirect:
+        return redirect
+    awards = db.query(Award).order_by(Award.sort_order.desc(), Award.created_at.desc()).all()
+    return request.app.state.templates.TemplateResponse("admin/awards.html", {
+        "request": request,
+        "logged_in": True,
+        "awards": awards,
+    })
+
+
+@router.get("/admin/awards/new")
+async def admin_award_new(request: Request):
+    redirect = await require_admin(request)
+    if redirect:
+        return redirect
+    return request.app.state.templates.TemplateResponse("admin/award_editor.html", {
+        "request": request,
+        "logged_in": True,
+        "award": None,
+        "is_new": True,
+    })
+
+
+@router.get("/admin/awards/{award_id}/edit")
+async def admin_award_edit(request: Request, award_id: int, db: Session = Depends(get_db)):
+    redirect = await require_admin(request)
+    if redirect:
+        return redirect
+    award = db.query(Award).filter(Award.id == award_id).first()
+    if not award:
+        return RedirectResponse(url="/admin/awards", status_code=303)
+    return request.app.state.templates.TemplateResponse("admin/award_editor.html", {
+        "request": request,
+        "logged_in": True,
+        "award": award,
+        "is_new": False,
+    })
+
+
+# ===== Award CRUD API =====
+@router.post("/api/awards")
+async def create_award(
+    request: Request,
+    title: str = Form(...),
+    organization: str = Form(""),
+    award_date: str = Form(""),
+    description: str = Form(""),
+    image_url: str = Form(""),
+    sort_order: int = Form(0),
+    db: Session = Depends(get_db),
+):
+    _ = get_current_user(request)
+    award = Award(
+        title=title,
+        organization=organization,
+        award_date=award_date,
+        description=description,
+        image_url=image_url,
+        sort_order=sort_order,
+    )
+    db.add(award)
+    db.commit()
+    return JSONResponse({"success": True, "id": award.id})
+
+
+@router.put("/api/awards/{award_id}")
+async def update_award(
+    request: Request,
+    award_id: int,
+    title: str = Form(...),
+    organization: str = Form(""),
+    award_date: str = Form(""),
+    description: str = Form(""),
+    image_url: str = Form(""),
+    sort_order: int = Form(0),
+    db: Session = Depends(get_db),
+):
+    _ = get_current_user(request)
+    award = db.query(Award).filter(Award.id == award_id).first()
+    if not award:
+        raise HTTPException(status_code=404, detail="奖项不存在")
+    award.title = title
+    award.organization = organization
+    award.award_date = award_date
+    award.description = description
+    award.image_url = image_url
+    award.sort_order = sort_order
+    db.commit()
+    return JSONResponse({"success": True})
+
+
+@router.delete("/api/awards/{award_id}")
+async def delete_award(request: Request, award_id: int, db: Session = Depends(get_db)):
+    _ = get_current_user(request)
+    award = db.query(Award).filter(Award.id == award_id).first()
+    if not award:
+        raise HTTPException(status_code=404, detail="奖项不存在")
+    db.delete(award)
+    db.commit()
+    return JSONResponse({"success": True})
 
 
 # ===== Project CRUD API =====

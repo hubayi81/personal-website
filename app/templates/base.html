@@ -12,6 +12,9 @@
     <div class="cursor-dot"></div>
     <div class="cursor-ring"></div>
 
+    <!-- 全站星空背景 -->
+    <canvas id="starfield"></canvas>
+
     <!-- 导航栏 -->
     <nav class="navbar glass">
         <div class="nav-container">
@@ -23,16 +26,25 @@
                 <li><a href="/about" class="{% if page == 'about' %}active{% endif %}">关于我</a></li>
                 <li><a href="/projects" class="{% if page == 'projects' %}active{% endif %}">项目</a></li>
                 <li><a href="/blog" class="{% if page == 'blog' %}active{% endif %}">博客</a></li>
+                <li><a href="/awards" class="{% if page == 'awards' %}active{% endif %}">奖项</a></li>
                 <li><a href="/contact" class="{% if page == 'contact' %}active{% endif %}">联系我</a></li>
-                {% if logged_in %}
-                <li><a href="/admin" class="nav-admin">管理</a></li>
-                {% endif %}
             </ul>
             <div class="nav-actions">
                 <button class="theme-toggle" aria-label="切换主题">
                     <span class="sun-icon">☀️</span>
                     <span class="moon-icon">🌙</span>
                 </button>
+
+                {% if logged_in %}
+                <a href="/admin" class="auth-trigger is-admin" title="管理后台">
+                    <span class="auth-dot"></span>
+                </a>
+                {% else %}
+                <a href="/admin/login?next={{ request.url.path }}" class="auth-trigger" title="登录">
+                    <span class="auth-dot"></span>
+                </a>
+                {% endif %}
+
                 <button class="nav-toggle" aria-label="菜单">
                     <span></span><span></span><span></span>
                 </button>
@@ -56,7 +68,9 @@
         </div>
     </footer>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="/static/js/main.js"></script>
+    <script src="/static/js/home.js"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -19,14 +19,32 @@
         <label>技术栈（JSON 数组格式，如 ["Python","FastAPI"]）</label>
         <input type="text" name="tech_stack" value="{{ project.tech_stack if project else '[]' }}">
     </div>
-    <div class="form-row">
-        <div class="form-group">
-            <label>项目图片 URL</label>
-            <input type="text" name="image_url" value="{{ project.image_url if project else '' }}">
+    <div class="form-group">
+        <label>项目图片</label>
+        <div class="upload-area">
+            <div class="upload-preview" id="projectPreview" style="{% if project and project.image_url %}background-image:url('{{ project.image_url }}'){% endif %}">
+                {% if not project or not project.image_url %}
+                <span class="upload-placeholder">📷</span>
+                {% endif %}
+            </div>
+            <div class="upload-actions">
+                <input type="text" name="image_url" id="projectImageUrl"
+                       value="{{ project.image_url if project else '' }}"
+                       placeholder="输入图片 URL 或点击上传">
+                <button type="button" class="btn-sm upload-btn" onclick="document.getElementById('projectFileInput').click()">📁 本地上传</button>
+                <input type="file" id="projectFileInput" accept="image/*" style="display:none" onchange="handleUpload(this, 'projectImageUrl', 'projectPreview', 'projectUploading')">
+                <span class="upload-status" id="projectUploading"></span>
+            </div>
         </div>
+    </div>
+    <div class="form-row">
         <div class="form-group">
             <label>GitHub URL</label>
             <input type="text" name="github_url" value="{{ project.github_url if project else '' }}">
+        </div>
+        <div class="form-group">
+            <label>在线演示 URL</label>
+            <input type="text" name="live_url" value="{{ project.live_url if project else '' }}" placeholder="https://your-demo.com">
         </div>
     </div>
     <div class="form-row">
@@ -40,10 +58,6 @@
         </div>
     </div>
     <div class="form-row">
-        <div class="form-group">
-            <label>在线演示 URL</label>
-            <input type="text" name="live_url" value="{{ project.live_url if project else '' }}" placeholder="https://your-demo.com">
-        </div>
         <div class="form-group">
             <label>排序权重（越大越靠前）</label>
             <input type="number" name="sort_order" value="{{ project.sort_order if project else 0 }}">

@@ -1,0 +1,39 @@
+{% extends "admin/layout.html" %}
+{% block title %}奖项管理{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h2>🏆 奖项 & 证书管理</h2>
+    <a href="/admin/awards/new" class="btn btn-primary">+ 添加奖项</a>
+</div>
+
+{% if awards %}
+<table class="admin-table">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>标题</th>
+            <th>颁发机构</th>
+            <th>日期</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for a in awards %}
+        <tr>
+            <td>{{ a.id }}</td>
+            <td>{{ a.title }}</td>
+            <td>{{ a.organization or '-' }}</td>
+            <td>{{ a.award_date or '-' }}</td>
+            <td class="table-actions">
+                <a href="/admin/awards/{{ a.id }}/edit" class="btn-sm">✏️ 编辑</a>
+                <button class="btn-sm btn-danger" onclick="deleteAward({{ a.id }}, '{{ a.title }}')">🗑 删除</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color: var(--text-muted);">还没有奖项，点击右上角添加。</p>
+{% endif %}
+{% endblock %}

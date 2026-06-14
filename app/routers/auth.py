@@ -11,9 +11,11 @@ router = APIRouter()
 
 @router.get("/admin/login")
 async def login_page(request: Request):
+    next_url = request.query_params.get("next", "/admin")
     return request.app.state.templates.TemplateResponse("admin/login.html", {
         "request": request,
         "error": "",
+        "next": next_url,
     })
 
 
@@ -22,6 +24,7 @@ async def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
+    next: str = Form("/admin"),
     db: Session = Depends(get_db),
 ):
     user = db.query(User).filter(User.username == username).first()
@@ -29,10 +32,11 @@ async def login(
         return request.app.state.templates.TemplateResponse("admin/login.html", {
             "request": request,
             "error": "用户名或密码错误",
+            "next": next,
         })
 
     session_id = create_session(username)
-    response = RedirectResponse(url="/admin", status_code=303)
+    response = RedirectResponse(url=next, status_code=303)
     response.set_cookie("session_id", session_id, httponly=True, max_age=86400)
     return response
 

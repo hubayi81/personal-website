@@ -8,15 +8,17 @@
     <link rel="stylesheet" href="/static/css/admin.css">
 </head>
 <body class="admin-body">
+    <!-- 自定义光标 -->
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+
     <nav class="admin-nav">
         <div class="admin-nav-left">
             <a href="/admin" class="admin-logo">✦ 后台管理</a>
         </div>
-        <div class="admin-nav-links">
-            <a href="/admin/projects">项目管理</a>
-            <a href="/admin/blogs">博客管理</a>
-            <a href="/" target="_blank">查看网站</a>
-            <a href="/admin/logout" class="logout-btn">登出</a>
+        <div class="admin-nav-right">
+            <a href="/" target="_blank" class="admin-view-site">查看网站 ↗</a>
+            <a href="/admin/logout" class="admin-nav-logout">退出</a>
         </div>
     </nav>
 
@@ -28,6 +30,8 @@
                 <li><a href="/admin/projects/new">➕ 新建项目</a></li>
                 <li><a href="/admin/blogs">📝 博客管理</a></li>
                 <li><a href="/admin/blogs/new">✍️ 写博客</a></li>
+                <li><a href="/admin/awards">🏆 奖项管理</a></li>
+                <li><a href="/admin/awards/new">➕ 添加奖项</a></li>
             </ul>
         </aside>
         <main class="admin-main">
@@ -35,6 +39,7 @@
         </main>
     </div>
 
+    <script src="/static/js/main.js"></script>
     <script src="/static/js/admin.js"></script>
 </body>
 </html>

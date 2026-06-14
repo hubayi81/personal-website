@@ -1,332 +1,390 @@
 /**
- * 首页特效：Three.js 星空粒子（大小不一 + 流星划过）、打字机效果、鼠标光晕
+ * 全站星空背景 + 首页独占：北斗七星脉冲 + 打字机 + 鼠标光晕
  */
 
-// === 星空粒子系统 ===
+// ========== 工具：Canvas 光晕纹理 ==========
+function createGlowTexture(innerColor, outerColor, size, falloff) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const half = size / 2;
+    const gradient = ctx.createRadialGradient(half, half, 0, half, half, half * falloff);
+    gradient.addColorStop(0, innerColor);
+    gradient.addColorStop(0.06, innerColor);
+    gradient.addColorStop(0.45, outerColor);
+    gradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
+    return new THREE.CanvasTexture(c);
+}
+
+function createSpikeTexture(color, spikeLen, size) {
+    const c = document.createElement('canvas');
+    c.width = c.height = size;
+    const ctx = c.getContext('2d');
+    const half = size / 2;
+    const glow = ctx.createRadialGradient(half, half, 0, half, half, size * 2 / 3);
+    glow.addColorStop(0, color);
+    glow.addColorStop(0.25, color);
+    glow.addColorStop(1, 'transparent');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, size, size);
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    for (let a = 0; a < 4; a++) {
+        ctx.save();
+        ctx.translate(half, half);
+        ctx.rotate(a * Math.PI / 4);
+        const spike = ctx.createLinearGradient(0, -spikeLen, 0, spikeLen);
+        spike.addColorStop(0, 'transparent');
+        spike.addColorStop(0.45, color);
+        spike.addColorStop(0.5, color);
+        spike.addColorStop(0.55, color);
+        spike.addColorStop(1, 'transparent');
+        ctx.fillStyle = spike;
+        ctx.fillRect(-1.5, -spikeLen, 3, spikeLen * 2);
+        ctx.restore();
+    }
+    ctx.restore();
+    return new THREE.CanvasTexture(c);
+}
+
+// ==========================================
+//  全站星空背景
+// ==========================================
 (function initStarfield() {
     const canvas = document.getElementById('starfield');
     if (!canvas || !window.THREE) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.5, 120);
     const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setClearColor(0x000000, 0); // 完全透明背景
 
-    const colorPurple = new THREE.Color(0x6c5ce7);
-    const colorCyan = new THREE.Color(0x00d2ff);
-    const colorWhite = new THREE.Color(0xffffff);
-    const colorGold = new THREE.Color(0xffd700);
+    const IS_HOMEPAGE = !!document.getElementById('typewriter');
 
-    // ===== 小星星（远处，0.03~0.06） =====
-    function createSmallStars() {
-        const count = 600;
-        const positions = new Float32Array(count * 3);
-        const colors = new Float32Array(count * 3);
-
-        for (let i = 0; i < count; i++) {
-            const radius = 20 + Math.random() * 35;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI * 0.7;
-
-            positions[i * 3] = radius * Math.cos(theta) * Math.sin(phi);
-            positions[i * 3 + 1] = radius * Math.cos(phi) - 5;
-            positions[i * 3 + 2] = radius * Math.sin(theta) * Math.sin(phi) - 10;
-
-            const r = Math.random();
-            let color;
-            if (r < 0.5) color = colorWhite;
-            else if (r < 0.75) color = colorPurple;
-            else if (r < 0.9) color = colorCyan;
-            else color = colorGold;
-
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
-        }
-
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const mat = new THREE.PointsMaterial({
-            size: 0.05,
-            vertexColors: true,
+    // ===== 1. 星空粒子（2x 密度，5种色温纹理池） =====
+    function createStarSprite(glowTex, size) {
+        const mat = new THREE.SpriteMaterial({
+            map: glowTex,
             blending: THREE.AdditiveBlending,
-            depthWrite: false,
+            depthWrite: false, depthTest: false,
             transparent: true,
-            opacity: 0.7,
+            opacity: 0.75 + Math.random() * 0.25,
         });
-
-        return new THREE.Points(geo, mat);
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(size, size, 1);
+        return sprite;
     }
 
-    // ===== 中等星星（0.06~0.12） =====
-    function createMediumStars() {
-        const count = 300;
-        const positions = new Float32Array(count * 3);
-        const colors = new Float32Array(count * 3);
-
-        for (let i = 0; i < count; i++) {
-            const radius = 12 + Math.random() * 25;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI * 0.7;
-
-            positions[i * 3] = radius * Math.cos(theta) * Math.sin(phi);
-            positions[i * 3 + 1] = radius * Math.cos(phi) - 3;
-            positions[i * 3 + 2] = radius * Math.sin(theta) * Math.sin(phi) - 8;
-
-            const r = Math.random();
-            let color;
-            if (r < 0.3) color = colorWhite;
-            else if (r < 0.55) color = colorPurple;
-            else if (r < 0.8) color = colorCyan;
-            else color = colorGold;
-
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
-        }
-
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const mat = new THREE.PointsMaterial({
-            size: 0.12,
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            transparent: true,
-            opacity: 0.85,
-        });
-
-        return new THREE.Points(geo, mat);
-    }
-
-    // ===== 大亮星（少量，0.15~0.35，闪烁） =====
-    function createBigStars() {
-        const count = 50;
-        const positions = new Float32Array(count * 3);
-        const colors = new Float32Array(count * 3);
-
-        for (let i = 0; i < count; i++) {
-            const radius = 8 + Math.random() * 20;
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.random() * Math.PI * 0.6;
-
-            positions[i * 3] = radius * Math.cos(theta) * Math.sin(phi);
-            positions[i * 3 + 1] = radius * Math.cos(phi) - 2;
-            positions[i * 3 + 2] = radius * Math.sin(theta) * Math.sin(phi) - 6;
-
-            const r = Math.random();
-            let color;
-            if (r < 0.3) color = colorWhite;
-            else if (r < 0.5) color = colorGold;
-            else if (r < 0.75) color = colorCyan;
-            else color = colorPurple;
-
-            colors[i * 3] = color.r;
-            colors[i * 3 + 1] = color.g;
-            colors[i * 3 + 2] = color.b;
-        }
-
-        const geo = new THREE.BufferGeometry();
-        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const mat = new THREE.PointsMaterial({
-            size: 0.3,
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            transparent: true,
-            opacity: 0.95,
-        });
-
-        return new THREE.Points(geo, mat);
-    }
-
-    const smallStars = createSmallStars();
-    const mediumStars = createMediumStars();
-    const bigStars = createBigStars();
-    scene.add(smallStars);
-    scene.add(mediumStars);
-    scene.add(bigStars);
-
-    // 连线
-    const linesGeometry = new THREE.BufferGeometry();
-    const linesCount = 150;
-    const linePositions = new Float32Array(linesCount * 6);
-
-    for (let i = 0; i < linesCount; i++) {
-        const r1 = 12 + Math.random() * 28;
-        const t1 = Math.random() * Math.PI * 2;
-        const p1 = Math.random() * Math.PI * 0.7;
-        const x1 = r1 * Math.cos(t1) * Math.sin(p1);
-        const y1 = r1 * Math.cos(p1) - 5;
-        const z1 = r1 * Math.sin(t1) * Math.sin(p1) - 10;
-
-        const r2 = r1 + (Math.random() - 0.5) * 2.5;
-        const t2 = t1 + (Math.random() - 0.5) * 0.25;
-        const p2 = p1 + (Math.random() - 0.5) * 0.25;
-        const x2 = r2 * Math.cos(t2) * Math.sin(p2);
-        const y2 = r2 * Math.cos(p2) - 5;
-        const z2 = r2 * Math.sin(t2) * Math.sin(p2) - 10;
-
-        linePositions[i * 6] = x1;
-        linePositions[i * 6 + 1] = y1;
-        linePositions[i * 6 + 2] = z1;
-        linePositions[i * 6 + 3] = x2;
-        linePositions[i * 6 + 4] = y2;
-        linePositions[i * 6 + 5] = z2;
-    }
-
-    linesGeometry.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
-    const lines = new THREE.LineSegments(linesGeometry, new THREE.LineBasicMaterial({
-        color: 0x6c5ce7,
-        transparent: true,
-        opacity: 0.12,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
+    const tempColors = [
+        { inner: '#ffffff', outer: '#7799cc' },
+        { inner: '#fafaff', outer: '#5577bb' },
+        { inner: '#fff8e8', outer: '#998866' },
+        { inner: '#ffe8d0', outer: '#775533' },
+        { inner: '#e8f0ff', outer: '#4466aa' },
+    ];
+    const sharedTextures = tempColors.map(tc => ({
+        tiny:  createGlowTexture(tc.inner, tc.outer, 32, 0.5),
+        small: createGlowTexture(tc.inner, tc.outer, 48, 0.4),
     }));
-    scene.add(lines);
+    // 额外大纹理池
+    const largeTextures = tempColors.map(tc =>
+        createGlowTexture(tc.inner, tc.outer, 64, 0.3)
+    );
+    const xlTextures = tempColors.map(tc =>
+        createGlowTexture(tc.inner, tc.outer, 80, 0.25)
+    );
 
-    // ===== 流星系统 =====
+    const allStars = [];
+
+    function addStarLayer(count, distMin, distMax, phiMax, yOff, zOff, sizeMin, sizeMax, texKey) {
+        for (let i = 0; i < count; i++) {
+            let tex;
+            if (texKey === 'xl') {
+                tex = xlTextures[Math.floor(Math.random() * xlTextures.length)];
+            } else if (texKey === 'large') {
+                tex = largeTextures[Math.floor(Math.random() * largeTextures.length)];
+            } else {
+                const pool = sharedTextures[Math.floor(Math.random() * sharedTextures.length)];
+                tex = pool[texKey];
+            }
+            const s = createStarSprite(tex, sizeMin + Math.random() * (sizeMax - sizeMin));
+            const dist = distMin + Math.random() * (distMax - distMin);
+            const theta = Math.random() * Math.PI * 2;
+            const phi = Math.random() * Math.PI * phiMax;
+            s.position.set(
+                dist * Math.cos(theta) * Math.sin(phi),
+                dist * Math.cos(phi) + yOff,
+                dist * Math.sin(theta) * Math.sin(phi) + zOff
+            );
+            s.userData = {
+                layer: texKey === 'xl' ? 3 : texKey === 'large' ? 2 : texKey === 'small' ? 1 : 0,
+                baseSize: s.scale.x,
+                phase: Math.random() * Math.PI * 2,
+            };
+            scene.add(s);
+            allStars.push(s);
+        }
+    }
+
+    // 2x 密度：原 480→960, 220→440, 80→160, 25→50
+    addStarLayer(1000, 22, 55, 0.72, -5, -15, 0.04, 0.10, 'tiny');
+    addStarLayer(500, 13, 30, 0.68, -3, -10, 0.07, 0.16, 'small');
+    addStarLayer(180, 6, 22, 0.62, -1, -6, 0.13, 0.30, 'large');
+    addStarLayer(60, 4, 15, 0.55, 0, -4, 0.20, 0.42, 'xl');
+
+    // ===== 2. 星云微粒（更多） =====
+    const nebulaClouds = [];
+    for (let i = 0; i < 70; i++) {
+        const hue = 215 + Math.random() * 45;
+        const tex = createGlowTexture(
+            `hsla(${hue}, 65%, 65%, 0.5)`,
+            `hsla(${hue}, 75%, 40%, 0)`,
+            256, 0.3
+        );
+        const mat = new THREE.SpriteMaterial({
+            map: tex,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false, depthTest: false,
+            transparent: true,
+            opacity: 0.04 + Math.random() * 0.09,
+        });
+        const sprite = new THREE.Sprite(mat);
+        const size = 3 + Math.random() * 14;
+        sprite.scale.set(size, size * 0.55, 1);
+        const dist = 16 + Math.random() * 28;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.random() * Math.PI * 0.5;
+        sprite.position.set(
+            dist * Math.cos(theta) * Math.sin(phi),
+            dist * Math.cos(phi) - 3,
+            dist * Math.sin(theta) * Math.sin(phi) - 10
+        );
+        sprite.userData = { phase: Math.random() * Math.PI * 2, speed: 0.08 + Math.random() * 0.3 };
+        scene.add(sprite);
+        nebulaClouds.push(sprite);
+    }
+
+    // ===== 3. 北斗七星（仅首页） =====
+    const dipperStars = [];
+    const rayGroups = [];
+    let dipperLine = null;
+
+    if (IS_HOMEPAGE) {
+        const DIPPER_BASE = { x: 4, y: 6, z: -8 };
+
+        const dipperLayout = [
+            { dx: 0,    dy: 0,    dz: 0,   size: 1.0 },
+            { dx: -1.4, dy: -0.6, dz: -0.4, size: 0.95 },
+            { dx: -2.8, dy: -1.0, dz: -0.8, size: 0.9 },
+            { dx: -4.0, dy: -0.8, dz: -0.6, size: 0.8 },
+            { dx: -4.8, dy: 0.4,  dz: -0.2, size: 1.05 },
+            { dx: -6.2, dy: 0.8,  dz: 0,    size: 0.9 },
+            { dx: -7.6, dy: 1.5,  dz: 0.2,  size: 1.1 },
+        ];
+
+        dipperLayout.forEach(d => {
+            const tex = createSpikeTexture('rgba(255,255,240,0.95)', 50 + d.size * 20, 128);
+            const mat = new THREE.SpriteMaterial({
+                map: tex,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false, depthTest: false,
+                transparent: true,
+                opacity: 0.95,
+            });
+            const sprite = new THREE.Sprite(mat);
+            const s = 0.28 * d.size;
+            sprite.scale.set(s, s, 1);
+            sprite.position.set(
+                DIPPER_BASE.x + d.dx,
+                DIPPER_BASE.y + d.dy,
+                DIPPER_BASE.z + d.dz
+            );
+            sprite.userData = {
+                isDipper: true,
+                baseScale: s,
+                pulseTimer: 0,
+                pulseInterval: 3 + Math.random() * 4,
+                isPulsing: false,
+                pulseProgress: 0,
+            };
+            scene.add(sprite);
+            dipperStars.push(sprite);
+        });
+
+        // 北斗连线
+        const allPts = dipperStars.map(s => s.position.clone());
+        const dipperLineGeo = new THREE.BufferGeometry().setFromPoints([
+            allPts[0], allPts[1], allPts[2], allPts[3],
+            allPts[4], allPts[5], allPts[6],
+            allPts[3], allPts[0], allPts[0], allPts[1],
+        ]);
+        dipperLine = new THREE.Line(dipperLineGeo, new THREE.LineBasicMaterial({
+            color: 0x8899cc, transparent: true, opacity: 0.2,
+            blending: THREE.AdditiveBlending, depthWrite: false,
+        }));
+        scene.add(dipperLine);
+
+        // 光芒射线
+        const rayAngles = [0, Math.PI/4, Math.PI/2, 3*Math.PI/4, Math.PI, 5*Math.PI/4, 3*Math.PI/2, 7*Math.PI/4];
+        dipperStars.forEach(dipperStar => {
+            const group = new THREE.Group();
+            group.position.copy(dipperStar.position);
+            rayAngles.forEach(angle => {
+                const rayTex = createGlowTexture('rgba(255,255,240,0.9)', 'rgba(200,220,255,0)', 64, 0.35);
+                const rayMat = new THREE.SpriteMaterial({
+                    map: rayTex, blending: THREE.AdditiveBlending,
+                    depthWrite: false, depthTest: false,
+                    transparent: true, opacity: 0,
+                });
+                const ray = new THREE.Sprite(rayMat);
+                const len = 0.5 + Math.random() * 0.9;
+                ray.scale.set(len, 0.04, 1);
+                ray.position.set(Math.cos(angle)*len*0.5, Math.sin(angle)*len*0.5, 0);
+                ray.rotation.z = angle;
+                group.add(ray);
+            });
+            scene.add(group);
+            rayGroups.push({ group, dipperStar });
+        });
+    }
+
+    // ===== 4. 流星系统（全站） =====
     const shootingStars = [];
-    const MAX_SHOOTERS = 3;
+    const MAX_SHOOTERS = 4;
 
     function createShootingStar() {
-        const startX = 8 + Math.random() * 15;    // 右上
-        const startY = 5 + Math.random() * 10;
+        const startX = 5 + Math.random() * 22;
+        const startY = 3 + Math.random() * 14;
         const startZ = -5 + Math.random() * 10;
+        const endX = startX - 10 - Math.random() * 28;
+        const endY = startY - 7 - Math.random() * 20;
+        const endZ = startZ - 4;
 
-        const length = 1.5 + Math.random() * 3;
-        const endX = startX - 15 - Math.random() * 20;  // 左下
-        const endY = startY - 10 - Math.random() * 15;
-        const endZ = startZ - 5;
-
-        // 流星主体线段
-        const geometry = new THREE.BufferGeometry();
-        const vertices = new Float32Array([
-            startX, startY, startZ,
-            endX, endY, endZ,
-        ]);
-        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-
-        // 头部亮色
-        const headColors = new Float32Array([
-            1, 1, 1,
-            0.4, 0.8, 1,
-        ]);
-        geometry.setAttribute('color', new THREE.BufferAttribute(headColors, 3));
-
-        const material = new THREE.LineBasicMaterial({
-            vertexColors: true,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            transparent: true,
-            opacity: 1,
-        });
-
-        const line = new THREE.Line(geometry, material);
-
-        // 尾部光点
-        const dotGeo = new THREE.BufferGeometry();
-        dotGeo.setAttribute('position', new THREE.BufferAttribute(
-            new Float32Array([endX, endY, endZ]), 3
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(
+            new Float32Array([startX, startY, startZ, endX, endY, endZ]), 3
         ));
-        const dotMat = new THREE.PointsMaterial({
-            size: 0.15,
-            color: 0x00d2ff,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            transparent: true,
-            opacity: 0.6,
-        });
-        const dot = new THREE.Points(dotGeo, dotMat);
-
+        geo.setAttribute('color', new THREE.BufferAttribute(
+            new Float32Array([1,1,1, 0.3,0.7,1]), 3
+        ));
+        const line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+            vertexColors: true, blending: THREE.AdditiveBlending,
+            depthWrite: false, transparent: true, opacity: 1,
+        }));
+        const dotGeo = new THREE.BufferGeometry();
+        dotGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([endX,endY,endZ]), 3));
+        const dot = new THREE.Points(dotGeo, new THREE.PointsMaterial({
+            size: 0.12, color: 0x00d2ff, blending: THREE.AdditiveBlending,
+            depthWrite: false, transparent: true, opacity: 0.7,
+        }));
         const group = new THREE.Group();
-        group.add(line);
-        group.add(dot);
-
-        // 流星数据
+        group.add(line); group.add(dot);
         return {
-            mesh: group,
-            life: 0,
-            maxLife: 60 + Math.random() * 80,  // 持续帧数
-            speed: 0.08 + Math.random() * 0.15,
-            direction: new THREE.Vector3(endX - startX, endY - startY, endZ - startZ).normalize(),
-            startX, startY, startZ,
-            endX, endY, endZ,
+            mesh: group, life: 0,
+            maxLife: 50 + Math.random() * 100,
+            speed: 0.06 + Math.random() * 0.18,
+            dir: new THREE.Vector3(endX-startX, endY-startY, endZ-startZ).normalize(),
         };
     }
 
     function updateShootingStars() {
-        // 随机生成新流星
-        if (shootingStars.length < MAX_SHOOTERS && Math.random() < 0.008) {
-            const star = createShootingStar();
-            shootingStars.push(star);
-            scene.add(star.mesh);
+        if (shootingStars.length < MAX_SHOOTERS && Math.random() < 0.005) {
+            const s = createShootingStar();
+            shootingStars.push(s);
+            scene.add(s.mesh);
         }
-
-        // 更新现有流星
         for (let i = shootingStars.length - 1; i >= 0; i--) {
-            const star = shootingStars[i];
-            star.life++;
-
-            const progress = star.life / star.maxLife;
-            star.mesh.position.x += star.direction.x * star.speed;
-            star.mesh.position.y += star.direction.y * star.speed;
-            star.mesh.position.z += star.direction.z * star.speed;
-
-            // 渐隐
-            star.mesh.children.forEach(c => {
-                if (c.material) c.material.opacity = 1 - progress;
+            const s = shootingStars[i];
+            s.life++;
+            s.mesh.position.x += s.dir.x * s.speed;
+            s.mesh.position.y += s.dir.y * s.speed;
+            s.mesh.position.z += s.dir.z * s.speed;
+            const prog = s.life / s.maxLife;
+            s.mesh.children.forEach(c => {
+                if (c.material && c.material.opacity !== undefined) c.material.opacity = 1 - prog;
             });
-
-            // 移除已消失的流星
-            if (star.life >= star.maxLife) {
-                scene.remove(star.mesh);
+            if (s.life >= s.maxLife) {
+                scene.remove(s.mesh);
                 shootingStars.splice(i, 1);
             }
         }
     }
 
+    // ===== 动画循环 =====
     camera.position.z = 5;
-
-    // 动画循环
     let mouseX = 0, mouseY = 0;
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', e => {
         mouseX = (e.clientX / window.innerWidth) * 2 - 1;
         mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
     });
 
-    // 大星星闪烁
-    let twinklePhase = 0;
-
+    let time = 0;
     function animate() {
         requestAnimationFrame(animate);
+        time += 0.016;
 
-        smallStars.rotation.y += 0.0002;
-        smallStars.rotation.x += 0.00008;
-        mediumStars.rotation.y += 0.00035;
-        mediumStars.rotation.x += 0.00012;
-        bigStars.rotation.y += 0.0005;
-        bigStars.rotation.x += 0.00015;
-        lines.rotation.y += 0.0003;
-        lines.rotation.x += 0.0001;
+        const baseRot = 0.0002;
+        allStars.forEach(s => {
+            s.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), baseRot * (1 + s.userData.layer * 0.6));
+            if (s.userData.layer >= 2) {
+                const twinkle = 1 + Math.sin(time * 2.5 + s.userData.phase) * 0.18;
+                s.scale.setScalar(s.userData.baseSize * twinkle);
+            }
+        });
 
-        // 大星星呼吸闪烁
-        twinklePhase += 0.02;
-        bigStars.material.opacity = 0.6 + Math.sin(twinklePhase) * 0.35;
-        bigStars.material.size = 0.25 + Math.sin(twinklePhase * 1.3) * 0.1;
+        nebulaClouds.forEach(n => {
+            n.material.opacity = 0.04 + Math.sin(time * n.userData.speed + n.userData.phase) * 0.025 + 0.03;
+        });
 
-        // 流星更新
         updateShootingStars();
 
-        camera.position.x += (mouseX * 1.5 - camera.position.x) * 0.02;
-        camera.position.y += (mouseY * 1.5 - camera.position.y) * 0.02;
+        // 北斗脉冲（仅首页）
+        if (IS_HOMEPAGE) {
+            dipperStars.forEach(dipperStar => {
+                const ud = dipperStar.userData;
+                if (!ud.isPulsing) {
+                    ud.pulseTimer += 0.016;
+                    if (ud.pulseTimer >= ud.pulseInterval) {
+                        ud.isPulsing = true;
+                        ud.pulseProgress = 0;
+                        ud.pulseTimer = 0;
+                        ud.pulseInterval = 3 + Math.random() * 5;
+                    }
+                }
+                if (ud.isPulsing) {
+                    ud.pulseProgress += 0.02;
+                    const t = ud.pulseProgress;
+                    const intensity = t < 0.3
+                        ? Math.sin(t / 0.3 * Math.PI / 2)
+                        : Math.cos((t - 0.3) / 0.7 * Math.PI / 2);
+                    dipperStar.scale.setScalar(ud.baseScale * (1 + intensity * 2.5));
+                    dipperStar.material.opacity = 0.9 + intensity * 0.1;
+                    if (t >= 1) { ud.isPulsing = false; dipperStar.scale.setScalar(ud.baseScale); dipperStar.material.opacity = 0.95; }
+                }
+            });
+            rayGroups.forEach(({ group, dipperStar }) => {
+                const ud = dipperStar.userData;
+                if (ud.isPulsing) {
+                    const t = ud.pulseProgress;
+                    const intensity = t < 0.3 ? Math.sin(t/0.3*Math.PI/2) : Math.cos((t-0.3)/0.7*Math.PI/2);
+                    group.position.copy(dipperStar.position);
+                    group.children.forEach(ray => {
+                        ray.material.opacity = intensity * 0.8;
+                        ray.scale.set(ray.scale.x*(1+intensity*2), 0.04*(1+intensity), 1);
+                    });
+                } else {
+                    group.children.forEach(ray => { ray.material.opacity = 0; });
+                }
+            });
+            if (dipperLine) dipperLine.material.opacity = 0.18 + Math.sin(time * 0.8) * 0.04;
+        }
+
+        camera.position.x += (mouseX * 1.2 - camera.position.x) * 0.015;
+        camera.position.y += (mouseY * 0.8 - camera.position.y) * 0.015;
         camera.lookAt(scene.position);
         renderer.render(scene, camera);
     }
@@ -339,64 +397,35 @@
     });
 })();
 
-// === 打字机效果 ===
+// ========== 打字机效果（仅首页） ==========
 (function typewriter() {
     const el = document.getElementById('typewriter');
     if (!el) return;
-
     const words = [
         '正在探索 LLM 应用开发...',
         '学习 FastAPI & Python 后端...',
         '折腾 Docker & 云部署...',
         '热爱 AI & 开源项目...',
     ];
-
-    let wordIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let isWaiting = false;
-
+    let wordIndex = 0, charIndex = 0, isDeleting = false, isWaiting = false;
     function tick() {
-        const currentWord = words[wordIndex];
-
-        if (isWaiting) {
-            isWaiting = false;
-            isDeleting = true;
-            setTimeout(tick, 50);
-            return;
-        }
-
-        if (isDeleting) {
-            el.textContent = currentWord.substring(0, charIndex - 1);
-            charIndex--;
-        } else {
-            el.textContent = currentWord.substring(0, charIndex + 1);
-            charIndex++;
-        }
-
+        const word = words[wordIndex];
+        if (isWaiting) { isWaiting = false; isDeleting = true; setTimeout(tick, 50); return; }
+        el.textContent = isDeleting ? word.substring(0, charIndex - 1) : word.substring(0, charIndex + 1);
+        charIndex += isDeleting ? -1 : 1;
         let speed = isDeleting ? 30 : 60 + Math.random() * 40;
-
-        if (!isDeleting && charIndex === currentWord.length) {
-            speed = 2000;
-            isWaiting = true;
-        } else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            wordIndex = (wordIndex + 1) % words.length;
-            speed = 300;
-        }
-
+        if (!isDeleting && charIndex === word.length) { speed = 2000; isWaiting = true; }
+        else if (isDeleting && charIndex === 0) { isDeleting = false; wordIndex = (wordIndex + 1) % words.length; speed = 300; }
         setTimeout(tick, speed);
     }
-
     setTimeout(tick, 1000);
 })();
 
-// === 鼠标光晕 ===
+// ========== 鼠标光晕（仅首页） ==========
 (function mouseGlow() {
     const glow = document.getElementById('mouseGlow');
     if (!glow) return;
-
-    document.addEventListener('mousemove', (e) => {
+    document.addEventListener('mousemove', e => {
         glow.style.left = e.clientX + 'px';
         glow.style.top = e.clientY + 'px';
     });

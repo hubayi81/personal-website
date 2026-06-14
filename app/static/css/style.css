@@ -53,6 +53,14 @@ body {
     min-height: 100vh;
 }
 
+/* 全站星空背景画布 */
+#starfield {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
+
 a { color: var(--accent-cyan); text-decoration: none; transition: color var(--transition-fast); }
 a:hover { color: var(--accent-purple); }
 
@@ -131,18 +139,162 @@ a, button, input, textarea, select, [data-clickable] { cursor: none; }
 }
 .nav-links a:hover, .nav-links a.active { color: var(--text-primary); }
 .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
-.nav-admin {
-    color: var(--accent-gold) !important;
-    border: 1px solid rgba(255, 215, 0, 0.3);
-    padding: 0.3rem 0.8rem !important;
-    border-radius: var(--radius-sm);
+
+.nav-actions { display: flex; align-items: center; gap: 0.8rem; position: relative; }
+
+/* ==========================================
+   认证入口 — 极简小圆点
+   ========================================== */
+.auth-trigger {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.55;
+    cursor: pointer;
+    text-decoration: none;
+    flex-shrink: 0;
 }
-.nav-admin:hover { background: rgba(255, 215, 0, 0.1); }
+.auth-trigger:hover { opacity: 1; transform: scale(1.08); }
 
-.nav-actions { display: flex; align-items: center; gap: 1rem; }
+/* 小圆点核心 */
+.auth-dot {
+    display: block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+/* 外圈光晕 */
+.auth-dot::after {
+    content: '';
+    position: absolute; top: -5px; left: -5px;
+    width: 17px; height: 17px;
+    border-radius: 50%;
+    border: 1.5px solid transparent;
+    transition: all 0.35s ease;
+}
 
-.theme-toggle {
-    background: none; border: 1px solid var(--border-color);
+/* 游客 hover：青色光 */
+.auth-trigger:not(.is-admin):hover .auth-dot {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 12px rgba(0, 210, 255, 0.5);
+}
+.auth-trigger:not(.is-admin):hover .auth-dot::after {
+    border-color: rgba(0, 210, 255, 0.3);
+    animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+/* 管理员的点：金色常亮 + 呼吸 */
+.auth-trigger.is-admin { opacity: 0.85; border-color: rgba(255, 215, 0, 0.15); }
+.auth-trigger.is-admin .auth-dot {
+    background: var(--accent-gold);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+    animation: adminDotPulse 2s ease-in-out infinite;
+}
+.auth-trigger.is-admin .auth-dot::after {
+    border-color: rgba(255, 215, 0, 0.25);
+    animation: dotPulse 2s ease-in-out infinite;
+    animation-delay: 0.8s;
+}
+.auth-trigger.is-admin:hover {
+    border-color: rgba(255, 215, 0, 0.4);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+@keyframes dotPulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(1.6); opacity: 0; }
+}
+@keyframes adminDotPulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+    50% { box-shadow: 0 0 18px rgba(255, 215, 0, 0.9); }
+}
+
+/* ==========================================
+   浮动标签输入框（登录页共用）
+   ========================================== */
+.auth-input-group {
+    position: relative; margin-bottom: 1.2rem;
+}
+.auth-input-group input {
+    width: 100%; padding: 0.85rem 0.9rem 0.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: none;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem; font-family: var(--font-sans);
+    outline: none;
+    transition: border-color 0.3s ease;
+}
+.auth-input-group input:focus {
+    border-bottom-color: var(--accent-purple);
+}
+.auth-input-group label {
+    position: absolute; top: 0.7rem; left: 0.9rem;
+    color: var(--text-muted); font-size: 0.9rem;
+    pointer-events: none;
+    transition: all 0.25s ease;
+}
+.auth-input-group input:focus ~ label,
+.auth-input-group input:not(:placeholder-shown) ~ label {
+    top: -0.1rem; left: 0.5rem;
+    font-size: 0.7rem;
+    color: var(--accent-purple);
+}
+
+/* 提交按钮 */
+.auth-submit {
+    width: 100%; padding: 0.85rem;
+    margin-top: 0.5rem;
+    border: none; border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--accent-purple), #5a4bd1);
+    color: #fff; font-size: 0.95rem; font-weight: 600;
+    letter-spacing: 2px;
+    cursor: none;
+    transition: all 0.3s ease;
+    position: relative; overflow: hidden;
+}
+.auth-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 30px rgba(108, 92, 231, 0.4);
+}
+.auth-submit:active { transform: translateY(0); }
+.auth-submit.loading .auth-submit-text { visibility: hidden; }
+.auth-submit.loading::after {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    transform: translate(-50%, -50%);
+}
+@keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+
+/* === 后台导航辅助（admin/layout.html 中用） === */
+.admin-nav-right { display: flex; align-items: center; gap: 1rem; }
+.admin-view-site {
+    color: var(--text-secondary); font-size: 0.85rem;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+.admin-view-site:hover { color: var(--accent-cyan); }
+.admin-nav-logout {
+    color: var(--accent-pink); font-size: 0.85rem;
+    text-decoration: none;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(255, 107, 157, 0.2);
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+}
+.admin-nav-logout:hover { background: rgba(255, 107, 157, 0.08); }
     width: 40px; height: 40px; border-radius: 50%;
     font-size: 1.1rem;
     transition: all var(--transition-fast);
