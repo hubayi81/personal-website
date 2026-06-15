@@ -1,0 +1,125 @@
+{% extends "admin/layout.html" %}
+{% block title %}收件箱{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h2>📬 收件箱 {% if unread_count %}<span class="unread-badge">{{ unread_count }}</span>{% endif %}</h2>
+</div>
+
+{% if messages %}
+<div class="inbox-list">
+    {% for msg in messages %}
+    <div class="inbox-item {% if not msg.is_read %}unread{% endif %}" id="msg-{{ msg.id }}">
+        <div class="inbox-item-header" onclick="toggleMsg({{ msg.id }})">
+            <div class="inbox-sender">
+                <span class="inbox-dot {% if not msg.is_read %}dot-unread{% endif %}"></span>
+                <strong>{{ msg.sender_name or '匿名' }}</strong>
+                {% if msg.sender_email %}
+                <span class="inbox-email">{{ msg.sender_email }}</span>
+                {% endif %}
+            </div>
+            <div class="inbox-meta">
+                <span class="inbox-time">{{ msg.created_at.strftime('%Y-%m-%d %H:%M') if msg.created_at else '-' }}</span>
+                <span class="inbox-actions">
+                    {% if not msg.is_read %}
+                    <button class="btn-sm" onclick="event.stopPropagation(); markRead({{ msg.id }})">✅ 已读</button>
+                    {% endif %}
+                    <button class="btn-sm btn-danger" onclick="event.stopPropagation(); deleteMsg({{ msg.id }})">🗑 删除</button>
+                </span>
+            </div>
+        </div>
+        <div class="inbox-item-body" id="msgBody-{{ msg.id }}" style="display:none;">
+            <hr class="profile-divider" style="margin:0.5rem 0;">
+            <div class="inbox-message">{{ msg.message }}</div>
+            {% if msg.sender_email %}
+            <a href="mailto:{{ msg.sender_email }}" class="btn btn-outline" style="margin-top:0.8rem;font-size:0.85rem;">📧 回复 {{ msg.sender_name }}</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div style="text-align:center;padding:3rem;color:var(--text-muted);">
+    <div style="font-size:3rem;margin-bottom:1rem;">📭</div>
+    <p>收件箱空空如也，等有人留言吧</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block admin_js %}
+<script>
+function toggleMsg(id) {
+    const body = document.getElementById('msgBody-' + id);
+    body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
+async function markRead(id) {
+    await fetch('/api/inbox/' + id + '/read', { method: 'POST' });
+    const item = document.getElementById('msg-' + id);
+    item.classList.remove('unread');
+    item.querySelector('.inbox-dot')?.classList.remove('dot-unread');
+    // 更新红点数字
+    const badge = document.querySelector('.unread-badge');
+    if (badge) {
+        const count = parseInt(badge.textContent) - 1;
+        if (count > 0) badge.textContent = count; else badge.remove();
+    }
+    // 隐藏"已读"按钮
+    const btn = item.querySelector('.btn-sm');
+    if (btn && btn.textContent.includes('已读')) btn.remove();
+}
+
+async function deleteMsg(id) {
+    if (!confirm('确定删除这条留言吗？')) return;
+    await fetch('/api/inbox/' + id, { method: 'DELETE' });
+    document.getElementById('msg-' + id)?.remove();
+}
+</script>
+
+<style>
+.unread-badge {
+    display: inline-block; background: var(--accent-pink);
+    color: #fff; font-size:0.7rem; padding:0.15rem 0.5rem;
+    border-radius:100px; vertical-align: middle;
+}
+
+.inbox-list { display:flex; flex-direction:column; gap:0.8rem; }
+
+.inbox-item {
+    background: var(--bg-card); border:1px solid var(--border-color);
+    border-radius: var(--radius-md); overflow:hidden;
+    transition: border-color var(--transition-fast);
+}
+.inbox-item.unread { border-left:3px solid var(--accent-purple); }
+
+.inbox-item-header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:1rem 1.2rem; cursor:pointer; flex-wrap:wrap; gap:0.5rem;
+    transition: background var(--transition-fast);
+}
+.inbox-item-header:hover { background: rgba(108,92,231,0.04); }
+
+.inbox-sender { display:flex; align-items:center; gap:0.6rem; }
+
+.inbox-dot {
+    width:8px; height:8px; border-radius:50%; background:var(--text-muted);
+    flex-shrink:0;
+}
+.dot-unread { background: var(--accent-pink); box-shadow:0 0 6px rgba(255,107,157,0.6); }
+
+.inbox-email { color:var(--text-muted); font-size:0.82rem; }
+
+.inbox-meta { display:flex; align-items:center; gap:1rem; }
+
+.inbox-time { color:var(--text-muted); font-size:0.78rem; font-family:var(--font-mono); }
+
+.inbox-actions { display:flex; gap:0.4rem; }
+
+.inbox-item-body { padding:0 1.2rem 1.2rem; }
+
+.inbox-message {
+    color:var(--text-secondary); line-height:1.8; font-size:0.92rem;
+    white-space:pre-wrap; word-break:break-word;
+}
+</style>
+{% endblock %}

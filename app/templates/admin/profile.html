@@ -1,0 +1,401 @@
+{% extends "admin/layout.html" %}
+{% block title %}个人信息{% endblock %}
+
+{% block admin_content %}
+<h2>👤 编辑个人信息</h2>
+
+<form class="admin-form profile-v2" id="profileForm">
+    <!-- 基本信息 -->
+    <div class="form-row">
+        <div class="form-group">
+            <label>头像 Emoji</label>
+            <div class="emoji-picker">
+                <input type="text" name="avatar_emoji" id="avatarEmoji" value="{{ profile.avatar_emoji or '🎓' }}" maxlength="2" readonly>
+                <div class="emoji-options" id="emojiOptions">
+                    {% for e in ['🎓','🧑‍💻','👨‍💻','🚀','⭐','💻','🖥️','🤖','🔧','🐍','☕','🎮','📚','💡','✨','🔥','👾','🦾','🧠','🎯'] %}
+                    <button type="button" class="emoji-btn {% if profile.avatar_emoji == e %}active{% endif %}" onclick="pickEmoji('{{ e }}')">{{ e }}</button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>GitHub 用户名</label>
+            <input type="text" name="github_username" value="{{ profile.github_username or 'hubayi81' }}">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>副标题（页面顶部一句话介绍）</label>
+        <input type="text" name="subtitle" value="{{ profile.subtitle or '' }}" placeholder="计算机专业大二在读 / 热爱 AI 应用开发与开源">
+    </div>
+
+    <hr class="profile-divider">
+
+    <!-- 个人信息项列表 -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <label>个人信息项</label>
+            <button type="button" class="btn-sm" onclick="addInfoItem()">+ 添加一行</button>
+        </div>
+        <div id="infoItemsList" class="editable-list">
+            <!-- JS 动态渲染 -->
+        </div>
+    </div>
+
+    <hr class="profile-divider">
+
+    <!-- 技能列表 -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <label>技能列表</label>
+            <button type="button" class="btn-sm" onclick="addSkill()">+ 添加技能</button>
+        </div>
+        <div id="skillsList" class="editable-list">
+            <!-- JS 动态渲染 -->
+        </div>
+    </div>
+
+    <hr class="profile-divider">
+
+    <!-- 联系方式 -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <label>联系方式（邮箱、GitHub、微信等）</label>
+            <button type="button" class="btn-sm" onclick="addContact()">+ 添加一行</button>
+        </div>
+        <div id="contactList" class="editable-list">
+            <!-- JS 动态渲染 -->
+        </div>
+    </div>
+
+    <hr class="profile-divider">
+
+    <!-- 社交链接 -->
+    <div class="profile-section">
+        <div class="profile-section-header">
+            <label>社交链接图标（GitHub、B站、知乎等）</label>
+            <button type="button" class="btn-sm" onclick="addSocial()">+ 添加链接</button>
+        </div>
+        <div id="socialList" class="editable-list">
+            <!-- JS 动态渲染 -->
+        </div>
+    </div>
+
+    <!-- 隐藏的 JSON 字段 -->
+    <input type="hidden" name="info_items" id="infoItemsJson">
+    <input type="hidden" name="skills" id="skillsJson">
+    <input type="hidden" name="contact_items" id="contactJson">
+    <input type="hidden" name="social_links" id="socialJson">
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">💾 保存</button>
+        <a href="/about" target="_blank" class="btn btn-outline">👁 预览</a>
+        <span class="save-status" id="saveStatus"></span>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .profile-divider { border: none; border-top: 1px solid var(--border-color); margin: 1.8rem 0; }
+
+    .profile-section-header {
+        display: flex; align-items: center; justify-content: space-between;
+        margin-bottom: 0.8rem;
+    }
+    .profile-section-header label {
+        color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;
+    }
+
+    /* 可编辑列表 */
+    .editable-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+    .editable-row {
+        display: flex; align-items: center; gap: 0.5rem;
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius-sm);
+        padding: 0.5rem 0.7rem;
+        transition: border-color var(--transition-fast);
+    }
+    .editable-row:hover { border-color: var(--border-hover); }
+
+    .editable-row input[type="text"], .editable-row input[type="number"] {
+        background: #0d0d1f; border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 4px; color: var(--text-primary); padding: 0.45rem 0.6rem;
+        font-size: 0.88rem; outline: none; font-family: var(--font-sans);
+        transition: border-color var(--transition-fast);
+    }
+    .editable-row input[type="text"]:focus, .editable-row input[type="number"]:focus {
+        border-color: var(--accent-purple);
+    }
+
+    .row-emoji-input { width: 44px; text-align: center; font-size: 1.2rem; }
+    .row-text-input { flex: 1; }
+    .row-skill-name { flex: 1; }
+    .row-skill-level { width: 60px; text-align: center; }
+
+    /* 技能滑条 */
+    .row-skill-slider {
+        flex: 2; display: flex; align-items: center; gap: 0.5rem;
+    }
+    .row-skill-slider input[type="range"] {
+        flex: 1; accent-color: var(--accent-purple); height: 4px;
+    }
+    .skill-bar-mini {
+        flex: 1; height: 6px; background: rgba(255,255,255,0.06);
+        border-radius: 3px; overflow: hidden;
+    }
+    .skill-bar-mini-fill {
+        height: 100%; border-radius: 3px;
+        background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+        transition: width 0.2s;
+    }
+    .skill-level-label { min-width: 28px; font-size: 0.8rem; color: var(--accent-cyan); font-family: var(--font-mono); text-align: right; }
+
+    .row-delete-btn {
+        width: 28px; height: 28px; border-radius: 50%;
+        border: 1px solid transparent; background: transparent;
+        color: var(--text-muted); font-size: 1rem;
+        display: flex; align-items: center; justify-content: center;
+        transition: all var(--transition-fast);
+        flex-shrink: 0;
+    }
+    .row-delete-btn:hover { color: var(--accent-pink); border-color: rgba(255,107,157,0.3); background: rgba(255,107,157,0.08); }
+
+    .editable-empty {
+        padding: 1rem; text-align: center;
+        color: var(--text-muted); font-size: 0.85rem;
+        border: 1px dashed rgba(255,255,255,0.06);
+        border-radius: var(--radius-sm);
+    }
+
+    /* emoji 选择器 */
+    .emoji-picker input[type="text"] {
+        width: 60px; text-align: center; font-size: 2rem; padding: 0.5rem;
+        background: #0d0d1f; border: 1px solid rgba(255,255,255,0.08);
+        border-radius: var(--radius-sm); color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    .emoji-options {
+        display: flex; flex-wrap: wrap; gap: 0.3rem;
+    }
+    .emoji-btn {
+        width: 36px; height: 36px; border-radius: 50%;
+        border: 1.5px solid transparent; background: transparent;
+        font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+        transition: all var(--transition-fast);
+    }
+    .emoji-btn:hover { border-color: var(--accent-purple); background: rgba(108,92,231,0.08); }
+    .emoji-btn.active { border-color: var(--accent-cyan); background: rgba(0,210,255,0.08); }
+
+    .save-status { font-size: 0.82rem; margin-left: 0.5rem; }
+    .save-status.success { color: var(--accent-green); }
+    .save-status.error { color: var(--accent-pink); }
+</style>
+{% endblock %}
+
+{% block admin_js %}
+<script>
+// ===== 数据（从服务器初始数据构建） =====
+let infoItems = {{ info_list | tojson | safe }};
+let skills = {{ skill_list | tojson | safe }};
+let contactItems = {{ contact_list | tojson | safe }};
+let socialLinks = {{ social_list | tojson | safe }};
+
+// ===== Emoji 选择 =====
+function pickEmoji(emoji) {
+    document.getElementById('avatarEmoji').value = emoji;
+    document.querySelectorAll('.emoji-btn').forEach(b => b.classList.toggle('active', b.textContent === emoji));
+}
+
+// ===== 个人信息项 =====
+function renderInfoItems() {
+    const container = document.getElementById('infoItemsList');
+    if (!infoItems.length) {
+        container.innerHTML = '<div class="editable-empty">还没有信息项，点击「+ 添加一行」</div>';
+        return;
+    }
+    container.innerHTML = infoItems.map((item, i) => `
+        <div class="editable-row">
+            <input type="text" class="row-emoji-input" value="${escapeAttr(item.icon || '')}" placeholder="🎓"
+                   onchange="updateInfoItem(${i},'icon',this.value)">
+            <input type="text" class="row-text-input" value="${escapeAttr(item.text || '')}" placeholder="如：浙江某高校 | 计算机科学与技术"
+                   onchange="updateInfoItem(${i},'text',this.value)">
+            <button type="button" class="row-delete-btn" onclick="deleteInfoItem(${i})" title="删除此行">&times;</button>
+        </div>
+    `).join('');
+}
+
+function updateInfoItem(index, key, value) {
+    infoItems[index][key] = value;
+}
+
+function addInfoItem() {
+    infoItems.push({ icon: '📍', text: '' });
+    renderInfoItems();
+    // 聚焦新增行的文本输入
+    const rows = document.querySelectorAll('#infoItemsList .row-text-input');
+    if (rows.length) rows[rows.length - 1].focus();
+}
+
+function deleteInfoItem(index) {
+    infoItems.splice(index, 1);
+    renderInfoItems();
+}
+
+// ===== 技能 =====
+function renderSkills() {
+    const container = document.getElementById('skillsList');
+    if (!skills.length) {
+        container.innerHTML = '<div class="editable-empty">还没有技能，点击「+ 添加技能」</div>';
+        return;
+    }
+    container.innerHTML = skills.map((skill, i) => `
+        <div class="editable-row">
+            <input type="text" class="row-text-input row-skill-name" value="${escapeAttr(skill.name || '')}" placeholder="技能名称"
+                   onchange="updateSkill(${i},'name',this.value)">
+            <div class="row-skill-slider">
+                <input type="range" min="0" max="100" value="${skill.level || 50}"
+                       oninput="updateSkillSlider(${i}, this.value)">
+                <div class="skill-bar-mini">
+                    <div class="skill-bar-mini-fill" id="skillBar${i}" style="width:${skill.level || 50}%"></div>
+                </div>
+            </div>
+            <input type="number" class="row-skill-level" value="${skill.level || 50}" min="0" max="100"
+                   onchange="updateSkill(${i},'level',parseInt(this.value)||0); renderSkills()">
+            <span class="skill-level-label">${skill.level || 50}%</span>
+            <button type="button" class="row-delete-btn" onclick="deleteSkill(${i})" title="删除此技能">&times;</button>
+        </div>
+    `).join('');
+}
+
+function updateSkill(index, key, value) {
+    skills[index][key] = value;
+}
+
+function updateSkillSlider(index, value) {
+    const level = parseInt(value) || 0;
+    skills[index].level = level;
+    const bar = document.getElementById('skillBar' + index);
+    if (bar) bar.style.width = level + '%';
+    // 更新百分比标签
+    const label = document.querySelectorAll('.skill-level-label')[index];
+    if (label) label.textContent = level + '%';
+    // 更新数字输入
+    const numInput = document.querySelectorAll('.row-skill-level')[index];
+    if (numInput) numInput.value = level;
+}
+
+function addSkill() {
+    skills.push({ name: '', level: 50 });
+    renderSkills();
+    const rows = document.querySelectorAll('#skillsList .row-skill-name');
+    if (rows.length) rows[rows.length - 1].focus();
+}
+
+function deleteSkill(index) {
+    skills.splice(index, 1);
+    renderSkills();
+}
+
+// ===== 联系方式 =====
+function renderContact() {
+    const container = document.getElementById('contactList');
+    if (!contactItems.length) {
+        container.innerHTML = '<div class="editable-empty">还没有联系方式，点击「+ 添加一行」</div>';
+        return;
+    }
+    container.innerHTML = contactItems.map((item, i) => `
+        <div class="editable-row">
+            <input type="text" class="row-emoji-input" value="${escapeAttr(item.icon || '')}" placeholder="📧"
+                   onchange="updateContact(${i},'icon',this.value)">
+            <input type="text" class="row-text-input" value="${escapeAttr(item.label || '')}" placeholder="标签（如：邮箱、GitHub）"
+                   style="max-width:140px;" onchange="updateContact(${i},'label',this.value)">
+            <input type="text" class="row-text-input" value="${escapeAttr(item.value || '')}" placeholder="值（如：xxx@email.com）"
+                   onchange="updateContact(${i},'value',this.value)">
+            <button type="button" class="row-delete-btn" onclick="deleteContact(${i})" title="删除此行">&times;</button>
+        </div>
+    `).join('');
+}
+
+function updateContact(index, key, value) { contactItems[index][key] = value; }
+
+function addContact() {
+    contactItems.push({ icon: '📧', label: '', value: '' });
+    renderContact();
+    const rows = document.querySelectorAll('#contactList .row-text-input');
+    if (rows.length) rows[rows.length - 1].focus();
+}
+
+function deleteContact(index) { contactItems.splice(index, 1); renderContact(); }
+
+// ===== 社交链接 =====
+function renderSocial() {
+    const container = document.getElementById('socialList');
+    if (!socialLinks.length) {
+        container.innerHTML = '<div class="editable-empty">还没有社交链接，点击「+ 添加链接」</div>';
+        return;
+    }
+    container.innerHTML = socialLinks.map((link, i) => `
+        <div class="editable-row">
+            <input type="text" class="row-emoji-input" value="${escapeAttr(link.icon || '')}" placeholder="🐙"
+                   onchange="updateSocial(${i},'icon',this.value)">
+            <input type="text" class="row-text-input" value="${escapeAttr(link.label || '')}" placeholder="名称（如：GitHub）"
+                   style="max-width:120px;" onchange="updateSocial(${i},'label',this.value)">
+            <input type="text" class="row-text-input" value="${escapeAttr(link.url || '')}" placeholder="链接（https://...）"
+                   onchange="updateSocial(${i},'url',this.value)">
+            <button type="button" class="row-delete-btn" onclick="deleteSocial(${i})" title="删除此行">&times;</button>
+        </div>
+    `).join('');
+}
+
+function updateSocial(index, key, value) { socialLinks[index][key] = value; }
+
+function addSocial() {
+    socialLinks.push({ icon: '🐙', label: '', url: '' });
+    renderSocial();
+    const rows = document.querySelectorAll('#socialList .row-text-input');
+    if (rows.length) rows[rows.length - 1].focus();
+}
+
+function deleteSocial(index) { socialLinks.splice(index, 1); renderSocial(); }
+
+// ===== 保存 =====
+const profileForm = document.getElementById('profileForm');
+profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    document.getElementById('infoItemsJson').value = JSON.stringify(infoItems);
+    document.getElementById('skillsJson').value = JSON.stringify(skills);
+    document.getElementById('contactJson').value = JSON.stringify(contactItems);
+    document.getElementById('socialJson').value = JSON.stringify(socialLinks);
+
+    const status = document.getElementById('saveStatus');
+    const formData = new FormData(profileForm);
+    try {
+        const resp = await fetch('/api/profile', { method: 'POST', body: formData });
+        if (resp.ok) {
+            status.textContent = '✅ 已保存';
+            status.className = 'save-status success';
+            setTimeout(() => { status.textContent = ''; }, 3000);
+        } else {
+            status.textContent = '❌ 保存失败';
+            status.className = 'save-status error';
+        }
+    } catch (err) {
+        status.textContent = '❌ 网络错误';
+        status.className = 'save-status error';
+    }
+});
+
+function escapeAttr(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ===== 初始渲染 =====
+renderInfoItems();
+renderSkills();
+renderContact();
+renderSocial();
+</script>
+{% endblock %}

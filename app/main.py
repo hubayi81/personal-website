@@ -8,7 +8,51 @@ from .database import init_db, SessionLocal
 from .auth import create_admin
 from .routers import pages, auth as auth_routes, admin, analytics
 from .middleware import VisitTrackerMiddleware
-from .models import BlogPost
+from .models import BlogPost, Profile, Milestone
+
+
+def seed_profile():
+    """首次启动创建默认个人信息（仅当不存在时）"""
+    db = SessionLocal()
+    try:
+        if db.query(Profile).filter(Profile.id == 1).first():
+            return
+        profile = Profile(
+            id=1,
+            avatar_emoji="🧑‍💻",
+            subtitle="计算机专业在读，热爱 AI 应用开发与开源",
+            info_items='[{"icon":"🎓","text":"计算机科学与技术 大二"},{"icon":"📍","text":"中国 · 浙江"},{"icon":"💡","text":"AI 应用 / 后端开发 / 开源"},{"icon":"🐙","text":"github.com/hubayi81"},{"icon":"📧","text":"hubayi81@example.com"}]',
+            skills='[{"name":"Python","level":78},{"name":"Java","level":62},{"name":"FastAPI / Flask","level":68},{"name":"MySQL","level":72},{"name":"Docker","level":58},{"name":"HTML / CSS / JS","level":55},{"name":"Git / GitHub","level":70},{"name":"AI / LLM 应用","level":75},{"name":"Linux / 运维","level":50}]',
+            github_username="hubayi81",
+            contact_items='[{"icon":"📧","label":"邮箱","value":"hubayi81@example.com"},{"icon":"🐙","label":"GitHub","value":"github.com/hubayi81"},{"icon":"💬","label":"微信","value":"hubayi81_wx"}]',
+            social_links='[{"icon":"🐙","label":"GitHub","url":"https://github.com/hubayi81"},{"icon":"📧","label":"邮箱","url":"mailto:hubayi81@example.com"},{"icon":"📺","label":"B站","url":"#"},{"icon":"💡","label":"知乎","url":"#"}]',
+        )
+        db.add(profile)
+        db.commit()
+    finally:
+        db.close()
+
+
+def seed_milestones():
+    """首次启动创建默认里程碑（仅当不存在时）"""
+    db = SessionLocal()
+    try:
+        if db.query(Milestone).count() > 0:
+            return
+        items = [
+            Milestone(date="2026.06", title="构建个人网站", description="使用 FastAPI + Docker + Three.js 从零搭建全栈个人网站", badge="badge-tech", sort_order=10),
+            Milestone(date="2026.04", title="AI 鞋类推荐助手", description="开发基于 DeepSeek API 的智能鞋类商品推荐系统", badge="badge-achievement", sort_order=9),
+            Milestone(date="2026.01", title="LLM API 深度实践", description="熟练掌握 LLM API 调用，prompt engineering、function calling 等", badge="badge-tech", sort_order=8),
+            Milestone(date="2025.09", title="Docker & 云部署入门", description="学习 Docker Compose 多容器编排，部署到阿里云", badge="badge-learn", sort_order=7),
+            Milestone(date="2025.06", title="MySQL 数据库实战", description="从裸 SQL 到 SQLAlchemy ORM，掌握数据库设计", badge="badge-learn", sort_order=6),
+            Milestone(date="2025.03", title="第一个 Python Web 项目", description="用 Flask 写了第一个后端项目", badge="badge-achievement", sort_order=5),
+            Milestone(date="2024.09", title="开始系统学习编程", description="系统学习 Python + Java，算法与数据结构", badge="badge-learn", sort_order=4),
+            Milestone(date="2023.09", title="进入大学", description="计算机科学与技术专业，开启编程之旅", badge="badge-learn", sort_order=3),
+        ]
+        db.add_all(items)
+        db.commit()
+    finally:
+        db.close()
 
 
 def seed_blog_posts():
@@ -325,6 +369,8 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
     seed_blog_posts()
+    seed_profile()
+    seed_milestones()
     yield
 
 

@@ -1,0 +1,43 @@
+{% extends "admin/layout.html" %}
+{% block title %}{% if is_new %}添加里程碑{% else %}编辑里程碑{% endif %}{% endblock %}
+
+{% block admin_content %}
+<h2>{% if is_new %}📅 添加里程碑{% else %}✏️ 编辑：{{ milestone.title }}{% endif %}</h2>
+
+<form class="admin-form" id="milestoneForm"
+      data-is-new="{{ is_new | lower }}"
+      data-id="{{ milestone.id if milestone else '' }}">
+    <div class="form-row">
+        <div class="form-group">
+            <label>日期 *（如 2026.06）</label>
+            <input type="text" name="date" value="{{ milestone.date if milestone else '' }}" required placeholder="2026.06">
+        </div>
+        <div class="form-group">
+            <label>排序权重（越大越靠上）</label>
+            <input type="number" name="sort_order" value="{{ milestone.sort_order if milestone else 0 }}">
+        </div>
+    </div>
+    <div class="form-group">
+        <label>标题 *</label>
+        <input type="text" name="title" value="{{ milestone.title if milestone else '' }}" required placeholder="如：构建个人网站">
+    </div>
+    <div class="form-group">
+        <label>描述</label>
+        <textarea name="description" rows="4" placeholder="简要描述这个里程碑...">{{ milestone.description if milestone else '' }}</textarea>
+    </div>
+    <div class="form-group">
+        <label>标签类型</label>
+        <select name="badge">
+            <option value="badge-tech" {% if milestone and milestone.badge == 'badge-tech' %}selected{% endif %}>🔧 技术</option>
+            <option value="badge-achievement" {% if milestone and milestone.badge == 'badge-achievement' %}selected{% endif %}>🏆 项目</option>
+            <option value="badge-learn" {% if milestone and milestone.badge == 'badge-learn' %}selected{% endif %}>📚 学习</option>
+        </select>
+    </div>
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+            {% if is_new %}添加{% else %}保存修改{% endif %}
+        </button>
+        <a href="/admin/milestones" class="btn btn-outline">取消</a>
+    </div>
+</form>
+{% endblock %}

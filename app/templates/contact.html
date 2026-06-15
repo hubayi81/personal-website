@@ -121,36 +121,23 @@
 <div class="contact-grid">
     <!-- 联系方式 -->
     <div>
+        {% for item in contact_list %}
         <div class="contact-item reveal-left">
-            <div class="contact-icon">📧</div>
+            <div class="contact-icon">{{ item.icon }}</div>
             <div class="contact-info">
-                <h3>邮箱</h3>
-                <p>hubayi81@example.com</p>
-                <button class="copy-btn" data-copy="hubayi81@example.com">📋 复制</button>
+                <h3>{{ item.label }}</h3>
+                <p>{{ item.value }}</p>
+                {% if item.label in ('邮箱','Email','email') and item.value %}
+                <button class="copy-btn" data-copy="{{ item.value }}">📋 复制</button>
+                {% endif %}
             </div>
         </div>
-
-        <div class="contact-item reveal-left">
-            <div class="contact-icon">🐙</div>
-            <div class="contact-info">
-                <h3>GitHub</h3>
-                <p><a href="https://github.com/hubayi81" target="_blank" rel="noopener">github.com/hubayi81</a></p>
-            </div>
-        </div>
-
-        <div class="contact-item reveal-left">
-            <div class="contact-icon">💬</div>
-            <div class="contact-info">
-                <h3>微信</h3>
-                <p>hubayi81_wx</p>
-            </div>
-        </div>
+        {% endfor %}
 
         <div class="social-links reveal">
-            <a href="https://github.com/hubayi81" target="_blank" rel="noopener" class="social-link" title="GitHub">🐙</a>
-            <a href="mailto:hubayi81@example.com" class="social-link" title="邮箱">📧</a>
-            <a href="#" class="social-link" title="B站">📺</a>
-            <a href="#" class="social-link" title="知乎">💡</a>
+            {% for link in social_list %}
+            <a href="{{ link.url }}" target="_blank" rel="noopener" class="social-link" title="{{ link.label or '' }}">{{ link.icon }}</a>
+            {% endfor %}
         </div>
     </div>
 
@@ -191,16 +178,26 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
     });
 });
 
-document.getElementById('contactForm').addEventListener('submit', (e) => {
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
-    btn.textContent = '✅ 消息已发送！';
+    const original = btn.textContent;
+    btn.textContent = '⏳ 发送中...';
     btn.disabled = true;
-    setTimeout(() => {
-        btn.textContent = '发送消息 ✈️';
-        btn.disabled = false;
-        e.target.reset();
-    }, 3000);
+    const formData = new FormData(e.target);
+    try {
+        const resp = await fetch('/api/contact', { method: 'POST', body: formData });
+        const data = await resp.json();
+        if (data.success) {
+            btn.textContent = '✅ 消息已发送！';
+            e.target.reset();
+        } else {
+            btn.textContent = '❌ ' + (data.error || '发送失败');
+        }
+    } catch {
+        btn.textContent = '❌ 网络错误';
+    }
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 3000);
 });
 </script>
 {% endblock %}

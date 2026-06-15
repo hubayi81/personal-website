@@ -1,9 +1,10 @@
 """前台页面路由"""
 import json
-from fastapi import APIRouter, Request, Depends
+from fastapi import APIRouter, Request, Depends, Form
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Project, BlogPost, Award
+from ..models import Project, BlogPost, Award, Profile, Milestone, ContactMessage, ContactMessage
 from ..auth import login_required
 
 router = APIRouter()
@@ -19,10 +20,8 @@ async def home(request: Request, db: Session = Depends(get_db)):
         .all()
     )
     for p in featured_projects:
-        try:
-            p.tech_list = json.loads(p.tech_stack or "[]")
-        except json.JSONDecodeError:
-            p.tech_list = []
+        try: p.tech_list = json.loads(p.tech_stack or "[]")
+        except json.JSONDecodeError: p.tech_list = []
 
     blog_posts = (
         db.query(BlogPost)
@@ -32,10 +31,8 @@ async def home(request: Request, db: Session = Depends(get_db)):
         .all()
     )
     for bp in blog_posts:
-        try:
-            bp.tag_list = json.loads(bp.tags or "[]")
-        except json.JSONDecodeError:
-            bp.tag_list = []
+        try: bp.tag_list = json.loads(bp.tags or "[]")
+        except json.JSONDecodeError: bp.tag_list = []
 
     awards = (
         db.query(Award)
@@ -44,20 +41,61 @@ async def home(request: Request, db: Session = Depends(get_db)):
         .all()
     )
 
+    profile = db.query(Profile).filter(Profile.id == 1).first()
+    if not profile:
+        profile = Profile(id=1, info_items="[]", skills="[]", subtitle="计算机专业在读，热爱 AI 应用开发与开源")
+    try: info_list = json.loads(profile.info_items or "[]")
+    except json.JSONDecodeError: info_list = []
+    try: skill_list = json.loads(profile.skills or "[]")
+    except json.JSONDecodeError: skill_list = []
+    try: contact_list = json.loads(profile.contact_items or "[]")
+    except json.JSONDecodeError: contact_list = []
+    try: social_list = json.loads(profile.social_links or "[]")
+    except json.JSONDecodeError: social_list = []
+
     return request.app.state.templates.TemplateResponse("index.html", {
         "request": request,
         "projects": featured_projects,
         "blog_posts": blog_posts,
         "awards": awards,
+        "profile": profile,
+        "info_list": info_list,
+        "skill_list": skill_list,
+        "contact_list": contact_list,
+        "social_list": social_list,
         "logged_in": login_required(request),
         "page": "home",
     })
 
 
 @router.get("/about")
-async def about(request: Request):
+async def about(request: Request, db: Session = Depends(get_db)):
+    profile = db.query(Profile).filter(Profile.id == 1).first()
+    if not profile:
+        # 返回默认空数据，等管理员初始化
+        profile = Profile(id=1, info_items="[]", skills="[]", subtitle="计算机专业在读，热爱 AI 应用开发与开源")
+
+    try:
+        info_list = json.loads(profile.info_items or "[]")
+    except json.JSONDecodeError:
+        info_list = []
+    try:
+        skill_list = json.loads(profile.skills or "[]")
+    except json.JSONDecodeError:
+        skill_list = []
+
+    milestones = (
+        db.query(Milestone)
+        .order_by(Milestone.sort_order.desc(), Milestone.created_at.desc())
+        .all()
+    )
+
     return request.app.state.templates.TemplateResponse("about.html", {
         "request": request,
+        "profile": profile,
+        "info_list": info_list,
+        "skill_list": skill_list,
+        "milestones": milestones,
         "logged_in": login_required(request),
         "page": "about",
     })
@@ -154,12 +192,41 @@ async def project_detail(request: Request, project_id: int, db: Session = Depend
 
 
 @router.get("/contact")
-async def contact(request: Request):
+async def contact(request: Request, db: Session = Depends(get_db)):
+    profile = db.query(Profile).filter(Profile.id == 1).first()
+    contact_list = []; social_list = []
+    if profile:
+        try: contact_list = json.loads(profile.contact_items or "[]")
+        except json.JSONDecodeError: pass
+        try: social_list = json.loads(profile.social_links or "[]")
+        except json.JSONDecodeError: pass
     return request.app.state.templates.TemplateResponse("contact.html", {
         "request": request,
+        "contact_list": contact_list,
+        "social_list": social_list,
         "logged_in": login_required(request),
         "page": "contact",
     })
+
+
+@router.post("/api/contact")
+async def submit_contact(
+    name: str = Form(...),
+    email: str = Form(...),
+    message: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """游客提交留言 → 写入数据库"""
+    if not name.strip() or not message.strip():
+        return JSONResponse({"success": False, "error": "名字和留言不能为空"}, status_code=400)
+    msg = ContactMessage(
+        sender_name=name.strip(),
+        sender_email=email.strip(),
+        message=message.strip(),
+    )
+    db.add(msg)
+    db.commit()
+    return JSONResponse({"success": True})
 
 
 @router.get("/awards")

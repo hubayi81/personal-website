@@ -162,7 +162,7 @@
 {% block content %}
 <section class="about-hero">
     <h1 class="section-title reveal">关于我</h1>
-    <p class="section-subtitle reveal" style="margin: 0 auto;">计算机专业在读，热爱 AI 应用开发与开源</p>
+    <p class="section-subtitle reveal" style="margin: 0 auto;">{{ profile.subtitle or '计算机专业在读，热爱 AI 应用开发与开源' }}</p>
 </section>
 
 <!-- 社区数据 -->
@@ -190,28 +190,21 @@
 <div class="about-grid">
     <!-- 左侧：基本信息 -->
     <div>
-        <div class="about-avatar reveal">🧑‍💻</div>
+        <div class="about-avatar reveal">{{ profile.avatar_emoji or '🧑‍💻' }}</div>
         <div class="glass-card reveal" style="padding: 2rem;">
-            <div class="info-item"><span class="info-icon">🎓</span> 计算机科学与技术 大二</div>
-            <div class="info-item"><span class="info-icon">📍</span> 中国 · 浙江</div>
-            <div class="info-item"><span class="info-icon">💡</span> AI 应用 / 后端开发 / 开源</div>
-            <div class="info-item"><span class="info-icon">🐙</span> github.com/hubayi81</div>
-            <div class="info-item"><span class="info-icon">📧</span> hubayi81@example.com</div>
+            {% for item in info_list %}
+            <div class="info-item"><span class="info-icon">{{ item.icon }}</span> {{ item.text }}</div>
+            {% endfor %}
         </div>
     </div>
 
     <!-- 右侧：技能 -->
     <div>
         <h3 class="reveal" style="font-size:1.5rem; margin-bottom:1.5rem; color:var(--accent-cyan);">🛠 技术能力</h3>
-        {% set skills = [
-            ('Python', 78), ('Java', 62), ('FastAPI / Flask', 68),
-            ('MySQL', 72), ('Docker', 58), ('HTML / CSS / JS', 55),
-            ('Git / GitHub', 70), ('AI / LLM 应用', 75), ('Linux / 运维', 50),
-        ] %}
-        {% for name, level in skills %}
-        <div class="skill-item reveal" data-skill="{{ level }}">
-            <div class="skill-header"><span>{{ name }}</span><span>{{ level }}%</span></div>
-            <div class="skill-bar"><div class="skill-fill" data-width="{{ level }}"></div></div>
+        {% for skill in skill_list %}
+        <div class="skill-item reveal" data-skill="{{ skill.level }}">
+            <div class="skill-header"><span>{{ skill.name }}</span><span>{{ skill.level }}%</span></div>
+            <div class="skill-bar"><div class="skill-fill" data-width="{{ skill.level }}"></div></div>
         </div>
         {% endfor %}
     </div>
@@ -225,24 +218,14 @@
 
 <div class="timeline-section">
     <div class="timeline">
-        {% set events = [
-            ('2026.06', '构建个人网站', '使用 FastAPI + Docker + Three.js 从零搭建全栈个人网站，集成星空特效、项目管理后台、博客系统', 'badge-tech'),
-            ('2026.04', 'AI 鞋类推荐助手', '开发基于 DeepSeek API 的智能鞋类商品推荐系统，实现自然语言理解 + 个性化推荐', 'badge-achievement'),
-            ('2026.01', 'LLM API 深度实践', '熟练掌握 LLM API 调用，包括 prompt engineering、多轮对话、function calling 等高级特性', 'badge-tech'),
-            ('2025.09', 'Docker & 云部署入门', '学习 Docker Compose 多容器编排，将项目部署到阿里云服务器', 'badge-learn'),
-            ('2025.06', 'MySQL 数据库实战', '从裸 SQL 到 SQLAlchemy ORM，掌握数据库设计、索引优化、事务管理', 'badge-learn'),
-            ('2025.03', '第一个 Python Web 项目', '用 Flask 写了第一个后端项目，理解了路由、模板、数据库的基本概念', 'badge-achievement'),
-            ('2024.09', '开始系统学习编程', '大二上学期，系统学习 Python + Java，开始接触算法与数据结构', 'badge-learn'),
-            ('2023.09', '进入大学', '计算机科学与技术专业，开启编程之旅', 'badge-learn'),
-        ] %}
-        {% for date, title, desc, badge in events %}
-        <div class="timeline-item reveal-{% if loop.index is odd %}left{% else %}right{% endif %} {% if loop.index <= 2 %}cyan-dot{% elif loop.index <= 5 %}purple-dot{% else %}gold-dot{% endif %}">
+        {% for m in milestones %}
+        <div class="timeline-item reveal-{% if loop.index is odd %}left{% else %}right{% endif %} {% if m.badge == 'badge-achievement' %}cyan-dot{% elif m.badge == 'badge-tech' %}purple-dot{% else %}gold-dot{% endif %}">
             <div class="timeline-dot"></div>
-            <div class="timeline-date">{{ date }}</div>
-            <div class="timeline-title">{{ title }}</div>
-            <div class="timeline-desc">{{ desc }}</div>
-            <span class="timeline-badge {{ badge }}">
-                {% if badge == 'badge-achievement' %}🏆 项目{% elif badge == 'badge-tech' %}🔧 技术{% else %}📚 学习{% endif %}
+            <div class="timeline-date">{{ m.date }}</div>
+            <div class="timeline-title">{{ m.title }}</div>
+            <div class="timeline-desc">{{ m.description }}</div>
+            <span class="timeline-badge {{ m.badge }}">
+                {% if m.badge == 'badge-achievement' %}🏆 项目{% elif m.badge == 'badge-tech' %}🔧 技术{% else %}📚 学习{% endif %}
             </span>
         </div>
         {% endfor %}
@@ -265,14 +248,14 @@
 // 从 GitHub API 获取真实数据
 (async function fetchGitHubStats() {
     try {
-        const resp = await fetch('https://api.github.com/users/hubayi81');
+        const resp = await fetch('https://api.github.com/users/{{ profile.github_username or "hubayi81" }}');
         if (!resp.ok) throw new Error('API limit');
         const data = await resp.json();
         document.getElementById('githubRepos').textContent = data.public_repos || '-';
         document.getElementById('githubFollowers').textContent = data.followers || '-';
 
         // 获取所有仓库的 star 总数
-        const reposResp = await fetch('https://api.github.com/users/hubayi81/repos?per_page=100');
+        const reposResp = await fetch('https://api.github.com/users/{{ profile.github_username or "hubayi81" }}/repos?per_page=100');
         if (reposResp.ok) {
             const repos = await reposResp.json();
             const totalStars = repos.reduce((sum, r) => sum + (r.stargazers_count || 0), 0);

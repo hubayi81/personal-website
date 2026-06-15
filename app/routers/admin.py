@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request, Form, Depends, HTTPException, UploadFile
 from fastapi.responses import RedirectResponse, JSONResponse
 from sqlalchemy.orm import Session
 from ..database import get_db
-from ..models import Project, BlogPost, Award
+from ..models import Project, BlogPost, Award, Profile, Milestone, ContactMessage
 from ..auth import get_current_user, login_required
 
 router = APIRouter()
@@ -48,6 +48,7 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
     blog_count = db.query(BlogPost).count()
     published_blog_count = db.query(BlogPost).filter(BlogPost.published == True).count()
     award_count = db.query(Award).count()
+    unread_count = db.query(ContactMessage).filter(ContactMessage.is_read == False).count()
     return request.app.state.templates.TemplateResponse("admin/dashboard.html", {
         "request": request,
         "logged_in": True,
@@ -55,7 +56,161 @@ async def dashboard(request: Request, db: Session = Depends(get_db)):
         "blog_count": blog_count,
         "published_blog_count": published_blog_count,
         "award_count": award_count,
+        "unread_count": unread_count,
     })
+
+
+# ===== 个人信息编辑 =====
+@router.get("/admin/profile")
+async def admin_profile(request: Request, db: Session = Depends(get_db)):
+    redirect = await require_admin(request)
+    if redirect: return redirect
+    profile = db.query(Profile).filter(Profile.id == 1).first()
+    if not profile:
+        profile = Profile(id=1, info_items="[]", skills="[]")
+        db.add(profile); db.commit()
+    try: info_list = json.loads(profile.info_items or "[]")
+    except json.JSONDecodeError: info_list = []
+    try: skill_list = json.loads(profile.skills or "[]")
+    except json.JSONDecodeError: skill_list = []
+    try: contact_list = json.loads(profile.contact_items or "[]")
+    except json.JSONDecodeError: contact_list = []
+    try: social_list = json.loads(profile.social_links or "[]")
+    except json.JSONDecodeError: social_list = []
+    return request.app.state.templates.TemplateResponse("admin/profile.html", {
+        "request": request, "logged_in": True, "profile": profile,
+        "info_list": info_list, "skill_list": skill_list,
+        "contact_list": contact_list, "social_list": social_list,
+    })
+
+
+@router.post("/api/profile")
+async def update_profile(
+    request: Request,
+    avatar_emoji: str = Form("🧑‍💻"),
+    subtitle: str = Form(""),
+    info_items: str = Form("[]"),
+    skills: str = Form("[]"),
+    github_username: str = Form("hubayi81"),
+    contact_items: str = Form("[]"),
+    social_links: str = Form("[]"),
+    db: Session = Depends(get_db),
+):
+    _ = get_current_user(request)
+    profile = db.query(Profile).filter(Profile.id == 1).first()
+    if not profile:
+        profile = Profile(id=1)
+        db.add(profile)
+    profile.avatar_emoji = avatar_emoji
+    profile.subtitle = subtitle
+    profile.info_items = info_items
+    profile.skills = skills
+    profile.github_username = github_username
+    profile.contact_items = contact_items
+    profile.social_links = social_links
+    db.commit()
+    return JSONResponse({"success": True})
+
+
+# ===== 里程碑管理 =====
+@router.get("/admin/milestones")
+async def admin_milestones(request: Request, db: Session = Depends(get_db)):
+    redirect = await require_admin(request)
+    if redirect: return redirect
+    milestones = db.query(Milestone).order_by(Milestone.sort_order.desc(), Milestone.created_at.desc()).all()
+    return request.app.state.templates.TemplateResponse("admin/milestones.html", {
+        "request": request, "logged_in": True, "milestones": milestones,
+    })
+
+
+@router.get("/admin/milestones/new")
+async def admin_milestone_new(request: Request):
+    redirect = await require_admin(request)
+    if redirect: return redirect
+    return request.app.state.templates.TemplateResponse("admin/milestone_editor.html", {
+        "request": request, "logged_in": True, "milestone": None, "is_new": True,
+    })
+
+
+@router.get("/admin/milestones/{m_id}/edit")
+async def admin_milestone_edit(request: Request, m_id: int, db: Session = Depends(get_db)):
+    redirect = await require_admin(request)
+    if redirect: return redirect
+    milestone = db.query(Milestone).filter(Milestone.id == m_id).first()
+    if not milestone: return RedirectResponse(url="/admin/milestones", status_code=303)
+    return request.app.state.templates.TemplateResponse("admin/milestone_editor.html", {
+        "request": request, "logged_in": True, "milestone": milestone, "is_new": False,
+    })
+
+
+# ===== Milestone API =====
+@router.post("/api/milestones")
+async def create_milestone(
+    request: Request, date: str = Form(...), title: str = Form(...),
+    description: str = Form(""), badge: str = Form("badge-tech"),
+    sort_order: int = Form(0), db: Session = Depends(get_db),
+):
+    _ = get_current_user(request)
+    m = Milestone(date=date, title=title, description=description, badge=badge, sort_order=sort_order)
+    db.add(m); db.commit()
+    return JSONResponse({"success": True, "id": m.id})
+
+
+@router.put("/api/milestones/{m_id}")
+async def update_milestone(
+    request: Request, m_id: int, date: str = Form(...), title: str = Form(...),
+    description: str = Form(""), badge: str = Form("badge-tech"),
+    sort_order: int = Form(0), db: Session = Depends(get_db),
+):
+    _ = get_current_user(request)
+    m = db.query(Milestone).filter(Milestone.id == m_id).first()
+    if not m: raise HTTPException(status_code=404, detail="不存在")
+    m.date = date; m.title = title; m.description = description
+    m.badge = badge; m.sort_order = sort_order
+    db.commit()
+    return JSONResponse({"success": True})
+
+
+@router.delete("/api/milestones/{m_id}")
+async def delete_milestone(request: Request, m_id: int, db: Session = Depends(get_db)):
+    _ = get_current_user(request)
+    m = db.query(Milestone).filter(Milestone.id == m_id).first()
+    if not m: raise HTTPException(status_code=404, detail="不存在")
+    db.delete(m); db.commit()
+    return JSONResponse({"success": True})
+
+
+# ===== 收件箱（联系我留言管理） =====
+@router.get("/admin/inbox")
+async def admin_inbox(request: Request, db: Session = Depends(get_db)):
+    redirect = await require_admin(request)
+    if redirect: return redirect
+    messages = db.query(ContactMessage).order_by(ContactMessage.created_at.desc()).all()
+    unread_count = db.query(ContactMessage).filter(ContactMessage.is_read == False).count()
+    return request.app.state.templates.TemplateResponse("admin/inbox.html", {
+        "request": request, "logged_in": True,
+        "messages": messages, "unread_count": unread_count,
+    })
+
+
+@router.post("/api/inbox/{msg_id}/read")
+async def mark_read(request: Request, msg_id: int, db: Session = Depends(get_db)):
+    _ = get_current_user(request)
+    msg = db.query(ContactMessage).filter(ContactMessage.id == msg_id).first()
+    if msg:
+        msg.is_read = True
+        db.commit()
+    return JSONResponse({"success": True})
+
+
+@router.delete("/api/inbox/{msg_id}")
+async def delete_message(request: Request, msg_id: int, db: Session = Depends(get_db)):
+    _ = get_current_user(request)
+    msg = db.query(ContactMessage).filter(ContactMessage.id == msg_id).first()
+    if msg:
+        db.delete(msg)
+        db.commit()
+    return JSONResponse({"success": True})
 
 
 # ===== 项目管理页面 =====

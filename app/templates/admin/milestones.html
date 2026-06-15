@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+{% block title %}里程碑管理{% endblock %}
+
+{% block admin_content %}
+<div class="admin-header">
+    <h2>📅 里程碑管理</h2>
+    <a href="/admin/milestones/new" class="btn btn-primary">+ 添加里程碑</a>
+</div>
+
+{% if milestones %}
+<table class="admin-table">
+    <thead>
+        <tr><th>ID</th><th>日期</th><th>标题</th><th>标签</th><th>排序</th><th>操作</th></tr>
+    </thead>
+    <tbody>
+        {% for m in milestones %}
+        <tr>
+            <td>{{ m.id }}</td>
+            <td>{{ m.date }}</td>
+            <td>{{ m.title }}</td>
+            <td>
+                {% if m.badge == 'badge-achievement' %}🏆 项目
+                {% elif m.badge == 'badge-tech' %}🔧 技术
+                {% else %}📚 学习{% endif %}
+            </td>
+            <td>{{ m.sort_order }}</td>
+            <td class="table-actions">
+                <a href="/admin/milestones/{{ m.id }}/edit" class="btn-sm">✏️ 编辑</a>
+                <button class="btn-sm btn-danger" onclick="deleteMilestone({{ m.id }}, '{{ m.title }}')">🗑 删除</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p style="color:var(--text-muted);">还没有里程碑，点击右上角添加。</p>
+{% endif %}
+{% endblock %}

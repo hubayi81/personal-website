@@ -27,12 +27,16 @@
         <aside class="admin-sidebar">
             <ul>
                 <li><a href="/admin">📊 数据看板</a></li>
+                <li><a href="/admin/inbox">📬 收件箱</a></li>
                 <li><a href="/admin/projects">🚀 项目管理</a></li>
                 <li><a href="/admin/projects/new">➕ 新建项目</a></li>
                 <li><a href="/admin/blogs">📝 博客管理</a></li>
                 <li><a href="/admin/blogs/new">✍️ 写博客</a></li>
                 <li><a href="/admin/awards">🏆 奖项管理</a></li>
                 <li><a href="/admin/awards/new">➕ 添加奖项</a></li>
+                <li><a href="/admin/profile">👤 个人信息</a></li>
+                <li><a href="/admin/milestones">📅 里程碑</a></li>
+                <li><a href="/admin/milestones/new">➕ 新里程碑</a></li>
             </ul>
         </aside>
         <main class="admin-main">
@@ -42,5 +46,6 @@
 
     <script src="/static/js/main.js"></script>
     <script src="/static/js/admin.js"></script>
+    {% block admin_js %}{% endblock %}
 </body>
 </html>

@@ -71,3 +71,43 @@ class VisitorLog(Base):
     is_admin = Column(Boolean, default=False)
     visit_date = Column(Date, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class Profile(Base):
+    """个人主页信息（单行：id=1 唯一）"""
+    __tablename__ = "profile"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    avatar_emoji = Column(String(10), default="🧑‍💻")
+    subtitle = Column(String(200), default="")
+    info_items = Column(Text, default="[]")      # JSON: [{"icon":"🎓","text":"xxx"}, ...]
+    skills = Column(Text, default="[]")          # JSON: [{"name":"Python","level":78}, ...]
+    github_username = Column(String(100), default="hubayi81")
+    contact_items = Column(Text, default="[]")   # JSON: [{"icon":"📧","label":"邮箱","value":"xxx@xx.com"},...]
+    social_links = Column(Text, default="[]")    # JSON: [{"icon":"🐙","url":"https://github.com/xxx"},...]
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class Milestone(Base):
+    """时间线里程碑"""
+    __tablename__ = "milestones"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    date = Column(String(50), nullable=False)     # "2026.06"
+    title = Column(String(200), nullable=False)
+    description = Column(Text, default="")
+    badge = Column(String(30), default="badge-tech")
+    sort_order = Column(Integer, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class ContactMessage(Base):
+    """联系我留言 — 游客提交，管理员后台查看"""
+    __tablename__ = "contact_messages"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    sender_name = Column(String(100), default="")
+    sender_email = Column(String(200), default="")
+    message = Column(Text, default="")
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)

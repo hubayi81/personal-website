@@ -143,15 +143,29 @@ if (awardForm) {
 // === 删除奖项 ===
 async function deleteAward(id, title) {
     if (!confirm(`确定要删除「${title}」吗？此操作不可撤销。`)) return;
+    try { const resp = await fetch(`/api/awards/${id}`, { method: 'DELETE' }); if (resp.ok) window.location.reload(); else alert('删除失败'); } catch (err) { alert('网络错误：' + err.message); }
+}
 
-    try {
-        const resp = await fetch(`/api/awards/${id}`, { method: 'DELETE' });
-        if (resp.ok) {
-            window.location.reload();
-        } else {
-            alert('删除失败');
-        }
-    } catch (err) {
-        alert('网络错误：' + err.message);
-    }
+// === 里程碑表单 ===
+const milestoneForm = document.getElementById('milestoneForm');
+if (milestoneForm) {
+    milestoneForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const isNew = milestoneForm.dataset.isNew === 'true';
+        const id = milestoneForm.dataset.id;
+        const formData = new FormData(milestoneForm);
+        const url = isNew ? '/api/milestones' : `/api/milestones/${id}`;
+        const method = isNew ? 'POST' : 'PUT';
+        try {
+            const resp = await fetch(url, { method, body: formData });
+            if (resp.ok) { window.location.href = '/admin/milestones'; }
+            else alert('保存失败');
+        } catch (err) { alert('网络错误：' + err.message); }
+    });
+}
+
+// === 删除里程碑 ===
+async function deleteMilestone(id, title) {
+    if (!confirm(`确定要删除「${title}」吗？此操作不可撤销。`)) return;
+    try { const resp = await fetch(`/api/milestones/${id}`, { method: 'DELETE' }); if (resp.ok) window.location.reload(); else alert('删除失败'); } catch (err) { alert('网络错误：' + err.message); }
 }
