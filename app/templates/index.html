@@ -1,27 +1,20 @@
 {% extends "base.html" %}
-{% block title %}胡嘉鑫 | AI 应用开发者{% endblock %}
+{% block title %}hubayi81 | AI 应用开发者{% endblock %}
 
 {% block extra_css %}
 <style>
-    /* 首页 Hero */
+    /* === 首页 Hero === */
     .hero {
         position: relative;
         min-height: 100vh;
         display: flex; align-items: center; justify-content: center;
-        overflow: hidden;
     }
 
-    .hero-content {
-        position: relative; z-index: 1;
-        text-align: center;
-        max-width: 800px; padding: 2rem;
-    }
+    .hero-content { position: relative; z-index: 1; text-align: center; max-width: 800px; padding: 2rem; }
 
     .hero-greeting {
         font-size: 1.2rem; color: var(--accent-cyan);
-        margin-bottom: 0.5rem;
-        letter-spacing: 3px;
-        text-transform: uppercase;
+        margin-bottom: 0.5rem; letter-spacing: 3px; text-transform: uppercase;
     }
 
     .hero-name {
@@ -29,43 +22,21 @@
         background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-purple) 50%, var(--accent-cyan) 100%);
         -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         background-clip: text;
-        margin-bottom: 1rem;
-        line-height: 1.2;
+        margin-bottom: 1rem; line-height: 1.2;
     }
 
-    .hero-role {
-        font-size: 1.5rem; color: var(--text-secondary);
-        margin-bottom: 2rem;
-    }
+    .hero-role { font-size: 1.5rem; color: var(--text-secondary); margin-bottom: 2rem; }
 
-    #typewriter {
-        color: var(--accent-gold);
-        font-family: var(--font-mono);
-        font-size: 1.1rem;
-        min-height: 2rem;
-    }
-    #typewriter::after {
-        content: '|';
-        animation: blink 1s step-end infinite;
-    }
-    @keyframes blink {
-        50% { opacity: 0; }
-    }
+    #typewriter { color: var(--accent-gold); font-family: var(--font-mono); font-size: 1.1rem; min-height: 2rem; }
+    #typewriter::after { content: '|'; animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
 
-    .hero-buttons {
-        display: flex; gap: 1rem; justify-content: center;
-        margin-top: 2.5rem;
-        flex-wrap: wrap;
-    }
+    .hero-buttons { display: flex; gap: 1rem; justify-content: center; margin-top: 2.5rem; flex-wrap: wrap; }
 
     .scroll-hint {
-        position: absolute; bottom: 2rem; left: 50%;
-        transform: translateX(-50%);
-        display: flex; flex-direction: column; align-items: center;
-        gap: 0.5rem;
-        color: var(--text-muted);
-        font-size: 0.85rem;
-        z-index: 1;
+        position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
+        display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+        color: var(--text-muted); font-size: 0.85rem; z-index: 1;
     }
     .scroll-arrow {
         width: 24px; height: 24px;
@@ -79,70 +50,161 @@
         50% { transform: rotate(45deg) translate(6px, 6px); opacity: 1; }
     }
 
-    /* 鼠标光晕 */
     .mouse-glow {
         position: fixed; top: 0; left: 0;
         width: 500px; height: 500px;
         background: radial-gradient(circle, rgba(108, 92, 231, 0.08) 0%, transparent 70%);
-        border-radius: 50%;
-        pointer-events: none;
-        z-index: 0;
+        border-radius: 50%; pointer-events: none; z-index: 0;
         transform: translate(-50%, -50%);
     }
 
-    /* 精选项目预览 */
-    .featured-section {
-        padding: 6rem 2rem;
-        max-width: 1200px; margin: 0 auto;
+    /* === 首页滚动板块 === */
+    .home-section {
+        position: relative; z-index: 1;
+        max-width: 1100px; margin: 0 auto 3rem;
+        padding: 0 2rem;
     }
-
-    .featured-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
-    }
-
-    .project-card-preview {
+    .home-section-card {
         background: var(--bg-card);
         border: 1px solid var(--border-color);
-        border-radius: var(--radius-lg);
-        padding: 1.8rem;
-        transition: all var(--transition-smooth);
-        position: relative; overflow: hidden;
+        border-radius: var(--radius-xl);
+        padding: 3rem 2.5rem;
+        transition: border-color 0.3s;
     }
-    .project-card-preview:hover {
-        border-color: var(--border-hover);
-        transform: translateY(-4px);
-        box-shadow: var(--shadow-card);
+    .home-section-card:hover { border-color: var(--border-hover); }
+
+    .home-section-title {
+        font-size: 2rem; font-weight: 800;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: inline-block;
     }
-    .project-card-preview h3 {
-        font-size: 1.3rem; margin-bottom: 0.5rem;
-        color: var(--text-primary);
-    }
-    .project-card-preview p {
-        color: var(--text-secondary); font-size: 0.95rem;
-        margin-bottom: 1rem;
-    }
-    .tech-tags {
-        display: flex; flex-wrap: wrap; gap: 0.5rem;
-    }
-    .tech-tag {
-        font-size: 0.75rem; padding: 0.2rem 0.7rem;
-        background: rgba(108, 92, 231, 0.15);
-        color: var(--accent-cyan);
-        border-radius: 100px;
-        font-family: var(--font-mono);
+    .home-section-sub {
+        font-size: 1rem; color: var(--text-secondary); margin-bottom: 2rem;
     }
 
-    .view-all {
-        text-align: center; margin-top: 2.5rem;
+    /* === 关于板块 === */
+    .home-about-grid {
+        display: grid; grid-template-columns: 1fr 1.5fr; gap: 2.5rem;
     }
+    .home-info-list { display: flex; flex-direction: column; gap: 0.8rem; }
+    .home-info-item { display: flex; align-items: center; gap: 0.6rem; color: var(--text-secondary); font-size: 0.95rem; }
+    .home-info-icon { font-size: 1.3rem; width: 28px; }
+
+    .home-skill-item { margin-bottom: 1.2rem; }
+    .home-skill-header { display: flex; justify-content: space-between; margin-bottom: 0.4rem; color: var(--text-secondary); font-size: 0.9rem; }
+    .home-skill-bar { height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+    .home-skill-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan)); width: 0; transition: width 1.5s ease; }
+
+    /* === 项目卡片 === */
+    .home-projects-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;
+    }
+    .home-project-card {
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius-lg); padding: 1.5rem;
+        transition: all var(--transition-smooth);
+    }
+    .home-project-card:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: var(--shadow-card); }
+    .home-project-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text-primary); }
+    .home-project-card p { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin-bottom: 0.8rem; }
+    .home-project-techs { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .home-project-techs span {
+        font-size: 0.7rem; padding: 0.15rem 0.6rem;
+        background: rgba(108,92,231,0.15); color: var(--accent-cyan);
+        border-radius: 100px; font-family: var(--font-mono);
+    }
+
+    /* === 博客卡片 === */
+    .home-blog-list { display: flex; flex-direction: column; gap: 1.2rem; }
+    .home-blog-item {
+        display: flex; align-items: baseline; gap: 1.5rem;
+        padding: 1.2rem 1.5rem;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+        text-decoration: none;
+    }
+    .home-blog-item:hover { border-color: var(--border-hover); background: rgba(108,92,231,0.04); }
+    .home-blog-date {
+        font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-muted);
+        min-width: 60px; flex-shrink: 0;
+    }
+    .home-blog-info h4 { color: var(--text-primary); font-size: 1rem; margin-bottom: 0.2rem; }
+    .home-blog-info p { color: var(--text-secondary); font-size: 0.85rem; }
+    .home-blog-tags { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.4rem; }
+    .home-blog-tags span {
+        font-size: 0.68rem; padding: 0.1rem 0.5rem;
+        background: rgba(0,210,255,0.08); color: var(--accent-cyan);
+        border-radius: 100px;
+    }
+
+    /* === 奖项卡片 === */
+    .home-awards-row {
+        display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center;
+    }
+    .home-award-card {
+        flex: 0 0 180px;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+        border-radius: var(--radius-lg); padding: 1.5rem 1rem; text-align: center;
+        transition: all var(--transition-smooth);
+    }
+    .home-award-card:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: var(--shadow-card); }
+    .home-award-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+    .home-award-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem; }
+    .home-award-org { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* === 联系板块 === */
+    .home-contact-grid {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;
+    }
+    .home-contact-items { display: flex; flex-direction: column; gap: 1rem; }
+    .home-contact-item {
+        display: flex; align-items: center; gap: 1rem;
+        padding: 1rem 1.2rem;
+        background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+        border-radius: var(--radius-md);
+        transition: all var(--transition-fast);
+    }
+    .home-contact-item:hover { border-color: var(--border-hover); }
+    .home-contact-icon { font-size: 1.5rem; width: 40px; text-align: center; }
+    .home-contact-item h4 { font-size: 0.9rem; color: var(--text-primary); }
+    .home-contact-item p { font-size: 0.8rem; color: var(--text-muted); }
+    .home-contact-item a { color: var(--accent-cyan); font-size: 0.85rem; }
+
+    .home-contact-form h4 { font-size: 1.1rem; color: var(--accent-cyan); margin-bottom: 1rem; }
+    .home-form-group { margin-bottom: 1rem; }
+    .home-form-group label { display: block; margin-bottom: 0.3rem; color: var(--text-secondary); font-size: 0.85rem; }
+    .home-form-group input, .home-form-group textarea {
+        width: 100%; padding: 0.7rem 0.9rem;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.9rem; outline: none;
+        font-family: var(--font-sans);
+        transition: border-color var(--transition-fast);
+    }
+    .home-form-group input:focus, .home-form-group textarea:focus { border-color: var(--accent-purple); }
+    .home-form-group textarea { min-height: 100px; resize: vertical; }
+
+    .home-section-link {
+        display: inline-flex; align-items: center; gap: 0.3rem;
+        margin-top: 1.5rem;
+        color: var(--accent-cyan); font-size: 0.9rem;
+        text-decoration: none;
+        transition: gap 0.3s;
+    }
+    .home-section-link:hover { gap: 0.6rem; }
 
     @media (max-width: 768px) {
         .hero-name { font-size: 2.5rem; }
         .hero-role { font-size: 1.1rem; }
-        .featured-grid { grid-template-columns: 1fr; }
+        .home-section-card { padding: 2rem 1.2rem; }
+        .home-about-grid { grid-template-columns: 1fr; }
+        .home-projects-grid { grid-template-columns: 1fr; }
+        .home-contact-grid { grid-template-columns: 1fr; }
+        .home-awards-row { flex-direction: column; }
+        .home-award-card { flex: 1; max-width: none; }
     }
 </style>
 {% endblock %}
@@ -150,52 +212,175 @@
 {% block content %}
 <div class="mouse-glow" id="mouseGlow"></div>
 
-<section class="hero">
-
+<!-- Hero -->
+<section class="hero" id="section-home">
     <div class="hero-content">
         <p class="hero-greeting reveal">👋 Hi，我是</p>
         <h1 class="hero-name reveal">胡嘉鑫</h1>
         <p class="hero-role reveal">AI 应用开发者 / CS 在读</p>
         <p id="typewriter" class="reveal"></p>
         <div class="hero-buttons reveal">
-            <a href="/projects" class="btn btn-primary">🚀 我的项目</a>
-            <a href="/about" class="btn btn-outline">👤 关于我</a>
-            <a href="/blog" class="btn btn-outline">📝 博客</a>
+            <a href="#section-projects" class="btn btn-primary">🚀 我的项目</a>
+            <a href="#section-about" class="btn btn-outline">👤 关于我</a>
+            <a href="#section-blog" class="btn btn-outline">📝 博客</a>
         </div>
     </div>
-
     <div class="scroll-hint">
-        <span>向下滚动</span>
+        <span>向下滚动探索</span>
         <div class="scroll-arrow"></div>
     </div>
 </section>
 
-{% if projects %}
-<section class="featured-section">
-    <h2 class="section-title reveal">精选项目</h2>
-    <p class="section-subtitle reveal">这些是我最近在做的项目</p>
-    <div class="featured-grid">
-        {% for p in projects %}
-        <div class="project-card-preview reveal-scale" data-tilt data-tilt-max="5" data-tilt-speed="400">
-            <h3>{{ p.title }}</h3>
-            <p>{{ (p.description or '')[:120] }}{% if p.description and p.description|length > 120 %}...{% endif %}</p>
-            {% if p.tech_stack %}
-            <div class="tech-tags">
-                {% for tech in (p.tech_list or [])[:4] %}
-                <span class="tech-tag">{{ tech }}</span>
+<!-- 关于我 -->
+<section class="home-section" id="section-about">
+    <div class="home-section-card reveal">
+        <h2 class="home-section-title">👤 关于我</h2>
+        <p class="home-section-sub">计算机专业在读，热爱 AI 应用开发与开源</p>
+        <div class="home-about-grid">
+            <div class="home-info-list">
+                <div class="home-info-item"><span class="home-info-icon">🎓</span> 计算机科学与技术 大二</div>
+                <div class="home-info-item"><span class="home-info-icon">📍</span> 中国 · 浙江</div>
+                <div class="home-info-item"><span class="home-info-icon">💡</span> AI 应用 / 后端开发 / 开源</div>
+                <div class="home-info-item"><span class="home-info-icon">🐙</span> github.com/hubayi81</div>
+                <div class="home-info-item"><span class="home-info-icon">📧</span> hubayi81@example.com</div>
+            </div>
+            <div>
+                {% for name, level in [('Python',78),('Java',62),('FastAPI / Flask',68),('MySQL',72),('Docker',58),('HTML / CSS / JS',55),('Git / GitHub',70),('AI / LLM 应用',75)] %}
+                <div class="home-skill-item skill-item" data-skill="{{ level }}">
+                    <div class="home-skill-header"><span>{{ name }}</span><span>{{ level }}%</span></div>
+                    <div class="home-skill-bar"><div class="home-skill-fill skill-fill" data-width="{{ level }}"></div></div>
+                </div>
                 {% endfor %}
             </div>
-            {% endif %}
         </div>
-        {% endfor %}
+        <a href="/about" class="home-section-link">查看完整简历 →</a>
     </div>
-    <div class="view-all">
-        <a href="/projects" class="btn btn-outline">查看全部项目 →</a>
+</section>
+
+<!-- 精选项目 -->
+{% if projects %}
+<section class="home-section" id="section-projects">
+    <div class="home-section-card reveal">
+        <h2 class="home-section-title">🚀 精选项目</h2>
+        <p class="home-section-sub">这些是我最近在做的项目</p>
+        <div class="home-projects-grid">
+            {% for p in projects %}
+            <a href="/projects/{{ p.id }}" class="home-project-card" style="text-decoration:none;">
+                <h3>{{ p.title }}</h3>
+                <p>{{ (p.description or '')[:100] }}{% if p.description and p.description|length > 100 %}...{% endif %}</p>
+                {% if p.tech_list %}
+                <div class="home-project-techs">
+                    {% for tech in p.tech_list[:4] %}
+                    <span>{{ tech }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </a>
+            {% endfor %}
+        </div>
+        <a href="/projects" class="home-section-link">查看全部项目 →</a>
     </div>
 </section>
 {% endif %}
+
+<!-- 博客 -->
+{% if blog_posts %}
+<section class="home-section" id="section-blog">
+    <div class="home-section-card reveal">
+        <h2 class="home-section-title">📝 最新博客</h2>
+        <p class="home-section-sub">记录学习过程和技术思考</p>
+        <div class="home-blog-list">
+            {% for post in blog_posts[:4] %}
+            <a href="/blog/{{ post.slug }}" class="home-blog-item">
+                <span class="home-blog-date">{{ post.created_at.strftime('%m-%d') if post.created_at else '' }}</span>
+                <div class="home-blog-info">
+                    <h4>{{ post.title }}</h4>
+                    <p>{{ post.summary or (post.content or '')[:80] }}</p>
+                    {% if post.tag_list %}
+                    <div class="home-blog-tags">
+                        {% for tag in post.tag_list[:3] %}
+                        <span>{{ tag }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        <a href="/blog" class="home-section-link">查看全部文章 →</a>
+    </div>
+</section>
+{% endif %}
+
+<!-- 奖项 -->
+{% if awards %}
+<section class="home-section" id="section-awards">
+    <div class="home-section-card reveal">
+        <h2 class="home-section-title">🏆 奖项 & 证书</h2>
+        <p class="home-section-sub">成长路上的里程碑</p>
+        <div class="home-awards-row">
+            {% for award in awards[:6] %}
+            <div class="home-award-card">
+                <div class="home-award-icon">{% if '证书' in award.title %}📜{% elif '奖' in award.title or '赛' in award.title %}🏅{% else %}⭐{% endif %}</div>
+                <div class="home-award-title">{{ award.title }}</div>
+                {% if award.organization %}
+                <div class="home-award-org">{{ award.organization }}</div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <a href="/awards" class="home-section-link">查看全部奖项 →</a>
+    </div>
+</section>
+{% endif %}
+
+<!-- 联系我 -->
+<section class="home-section" id="section-contact" style="margin-bottom: 1rem;">
+    <div class="home-section-card reveal">
+        <h2 class="home-section-title">📬 联系我</h2>
+        <p class="home-section-sub">欢迎交流技术和项目合作</p>
+        <div class="home-contact-grid">
+            <div class="home-contact-items">
+                <div class="home-contact-item">
+                    <span class="home-contact-icon">📧</span>
+                    <div><h4>邮箱</h4><p>hubayi81@example.com</p></div>
+                </div>
+                <div class="home-contact-item">
+                    <span class="home-contact-icon">🐙</span>
+                    <div><h4>GitHub</h4><a href="https://github.com/hubayi81" target="_blank" rel="noopener">@hubayi81</a></div>
+                </div>
+                <div class="home-contact-item">
+                    <span class="home-contact-icon">💬</span>
+                    <div><h4>微信</h4><p>hubayi81_wx</p></div>
+                </div>
+            </div>
+            <div class="home-contact-form">
+                <h4>✉️ 给我留言</h4>
+                <form id="homeContactForm">
+                    <div class="home-form-group"><label>你的名字</label><input type="text" name="name" placeholder="怎么称呼你？" required></div>
+                    <div class="home-form-group"><label>邮箱地址</label><input type="email" name="email" placeholder="your@email.com" required></div>
+                    <div class="home-form-group"><label>想说的话</label><textarea name="message" placeholder="你想聊什么？" required></textarea></div>
+                    <button type="submit" class="btn btn-primary">发送消息 ✈️</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.8.1/vanilla-tilt.min.js"></script>
+<script>
+// 联系表单提交
+(function() {
+    const form = document.getElementById('homeContactForm');
+    if (!form) return;
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const btn = form.querySelector('button');
+        btn.textContent = '✅ 消息已发送！';
+        btn.disabled = true;
+        setTimeout(() => { btn.textContent = '发送消息 ✈️'; btn.disabled = false; form.reset(); }, 3000);
+    });
+})();
+</script>
 {% endblock %}

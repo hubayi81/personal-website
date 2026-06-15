@@ -1,6 +1,6 @@
 """SQLAlchemy ORM 模型"""
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, Date
 from .database import Base
 
 
@@ -57,3 +57,17 @@ class Award(Base):
     sort_order = Column(Integer, default=0)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class VisitorLog(Base):
+    """访问日志"""
+    __tablename__ = "visitor_logs"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    path = Column(String(300), nullable=False, index=True)
+    ip_address = Column(String(45), default="")
+    user_agent = Column(String(500), default="")
+    referer = Column(String(500), default="")
+    is_admin = Column(Boolean, default=False)
+    visit_date = Column(Date, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, index=True)

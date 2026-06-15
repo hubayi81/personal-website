@@ -6,6 +6,7 @@
     <title>{% block title %}管理后台{% endblock %} | 胡嘉鑫</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/admin.css">
+    {% block extra_head %}{% endblock %}
 </head>
 <body class="admin-body">
     <!-- 自定义光标 -->
@@ -25,7 +26,7 @@
     <div class="admin-container">
         <aside class="admin-sidebar">
             <ul>
-                <li><a href="/admin">📊 仪表盘</a></li>
+                <li><a href="/admin">📊 数据看板</a></li>
                 <li><a href="/admin/projects">🚀 项目管理</a></li>
                 <li><a href="/admin/projects/new">➕ 新建项目</a></li>
                 <li><a href="/admin/blogs">📝 博客管理</a></li>

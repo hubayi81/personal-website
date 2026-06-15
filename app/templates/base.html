@@ -21,13 +21,13 @@
             <a href="/" class="nav-logo">
                 <span class="logo-star">✦</span> Hujiaxin
             </a>
-            <ul class="nav-links">
-                <li><a href="/" class="{% if page == 'home' %}active{% endif %}">首页</a></li>
-                <li><a href="/about" class="{% if page == 'about' %}active{% endif %}">关于我</a></li>
-                <li><a href="/projects" class="{% if page == 'projects' %}active{% endif %}">项目</a></li>
-                <li><a href="/blog" class="{% if page == 'blog' %}active{% endif %}">博客</a></li>
-                <li><a href="/awards" class="{% if page == 'awards' %}active{% endif %}">奖项</a></li>
-                <li><a href="/contact" class="{% if page == 'contact' %}active{% endif %}">联系我</a></li>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/" class="nav-link-home {% if page == 'home' %}active{% endif %}" data-section="home">首页</a></li>
+                <li><a href="/about" class="nav-link-about {% if page == 'about' %}active{% endif %}" data-section="about">关于我</a></li>
+                <li><a href="/projects" class="nav-link-projects {% if page == 'projects' %}active{% endif %}" data-section="projects">项目</a></li>
+                <li><a href="/blog" class="nav-link-blog {% if page == 'blog' %}active{% endif %}" data-section="blog">博客</a></li>
+                <li><a href="/awards" class="nav-link-awards {% if page == 'awards' %}active{% endif %}" data-section="awards">奖项</a></li>
+                <li><a href="/contact" class="nav-link-contact {% if page == 'contact' %}active{% endif %}" data-section="contact">联系我</a></li>
             </ul>
             <div class="nav-actions">
                 <button class="theme-toggle" aria-label="切换主题">

@@ -18,9 +18,37 @@ async def home(request: Request, db: Session = Depends(get_db)):
         .limit(6)
         .all()
     )
+    for p in featured_projects:
+        try:
+            p.tech_list = json.loads(p.tech_stack or "[]")
+        except json.JSONDecodeError:
+            p.tech_list = []
+
+    blog_posts = (
+        db.query(BlogPost)
+        .filter(BlogPost.published == True)
+        .order_by(BlogPost.created_at.desc())
+        .limit(4)
+        .all()
+    )
+    for bp in blog_posts:
+        try:
+            bp.tag_list = json.loads(bp.tags or "[]")
+        except json.JSONDecodeError:
+            bp.tag_list = []
+
+    awards = (
+        db.query(Award)
+        .order_by(Award.sort_order.desc(), Award.created_at.desc())
+        .limit(6)
+        .all()
+    )
+
     return request.app.state.templates.TemplateResponse("index.html", {
         "request": request,
         "projects": featured_projects,
+        "blog_posts": blog_posts,
+        "awards": awards,
         "logged_in": login_required(request),
         "page": "home",
     })

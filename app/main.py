@@ -6,7 +6,8 @@ from starlette.templating import Jinja2Templates
 
 from .database import init_db, SessionLocal
 from .auth import create_admin
-from .routers import pages, auth as auth_routes, admin
+from .routers import pages, auth as auth_routes, admin, analytics
+from .middleware import VisitTrackerMiddleware
 from .models import BlogPost
 
 
@@ -337,7 +338,11 @@ app.state.templates = templates
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 app.mount("/uploads", StaticFiles(directory="app/static/uploads"), name="uploads")
 
+# 中间件
+app.add_middleware(VisitTrackerMiddleware)
+
 # 注册路由
 app.include_router(pages.router)
 app.include_router(auth_routes.router)
 app.include_router(admin.router)
+app.include_router(analytics.router)

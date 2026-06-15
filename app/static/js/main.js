@@ -108,3 +108,56 @@ if (navToggle && navLinks) {
     });
 }
 
+// === 首页：导航栏链接滚动 + 当前板块高亮 ===
+(function navScrollTracking() {
+    const sections = {
+        home: document.getElementById('section-home'),
+        about: document.getElementById('section-about'),
+        projects: document.getElementById('section-projects'),
+        blog: document.getElementById('section-blog'),
+        awards: document.getElementById('section-awards'),
+        contact: document.getElementById('section-contact'),
+    };
+
+    // 只在有首页板块时启用（即当前在首页）
+    const hasHomeSections = sections.home || sections.about;
+    if (!hasHomeSections) return;
+
+    const navLinksAll = document.querySelectorAll('#navLinks a[data-section]');
+
+    // 点击导航 → 滚动到对应板块（阻止默认跳转）
+    navLinksAll.forEach(link => {
+        link.addEventListener('click', (e) => {
+            const secKey = link.dataset.section;
+            const target = sections[secKey];
+            if (!target) return; // 该板块不在首页，正常跳转
+
+            e.preventDefault();
+            const offset = document.querySelector('.navbar').offsetHeight + 20;
+            const top = target.getBoundingClientRect().top + window.scrollY - offset;
+            window.scrollTo({ top, behavior: 'smooth' });
+
+            // 关闭移动端菜单
+            document.querySelector('.nav-links')?.classList.remove('open');
+        });
+    });
+
+    // IntersectionObserver：滚动到某个板块时高亮对应导航
+    const navObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (!entry.isIntersecting) return;
+            const secKey = Object.keys(sections).find(k => sections[k] === entry.target);
+            if (!secKey) return;
+
+            navLinksAll.forEach(l => {
+                l.classList.toggle('active', l.dataset.section === secKey);
+            });
+        });
+    }, {
+        threshold: 0.25,
+        rootMargin: '-80px 0px -30% 0px',
+    });
+
+    Object.values(sections).forEach(s => { if (s) navObserver.observe(s); });
+})();
+

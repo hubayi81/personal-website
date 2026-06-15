@@ -53,5 +53,20 @@ CREATE TABLE IF NOT EXISTS blog_posts (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- 访问日志表
+CREATE TABLE IF NOT EXISTS visitor_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    path VARCHAR(300) NOT NULL,
+    ip_address VARCHAR(45) DEFAULT '',
+    user_agent VARCHAR(500) DEFAULT '',
+    referer VARCHAR(500) DEFAULT '',
+    is_admin BOOLEAN DEFAULT FALSE,
+    visit_date DATE,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_path (path),
+    INDEX idx_visit_date (visit_date),
+    INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- 插入默认管理员 (密码: admin123 → bcrypt hash)
 -- 实际密码哈希将在首次启动时由应用创建

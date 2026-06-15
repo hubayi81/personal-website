@@ -1,34 +1,74 @@
 {% extends "admin/layout.html" %}
-{% block title %}仪表盘 | 管理后台{% endblock %}
+{% block title %}数据看板{% endblock %}
 
 {% block admin_content %}
-<h2>📊 仪表盘</h2>
-<div class="dashboard-stats">
+<div class="dashboard-header">
+    <h2>📊 数据看板</h2>
+    <span class="dashboard-update" id="lastUpdate">加载中...</span>
+</div>
+
+<!-- PV 数字卡片 -->
+<div class="dashboard-stats chart-panel" id="statCards">
     <div class="stat-card">
-        <div class="stat-icon">🚀</div>
-        <div class="stat-value">{{ project_count }}</div>
-        <div class="stat-label">项目总数</div>
+        <div class="stat-icon">📈</div>
+        <div class="stat-value" id="statTodayPV">--</div>
+        <div class="stat-label">今日 PV</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">📝</div>
-        <div class="stat-value">{{ blog_count }}</div>
-        <div class="stat-label">博客文章</div>
+        <div class="stat-icon">📅</div>
+        <div class="stat-value" id="statYesterdayPV">--</div>
+        <div class="stat-label">昨日 PV</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">✅</div>
-        <div class="stat-value">{{ published_blog_count }}</div>
-        <div class="stat-label">已发布</div>
+        <div class="stat-icon">🔥</div>
+        <div class="stat-value" id="statTotalPV">--</div>
+        <div class="stat-label">累计 PV</div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon">🏆</div>
-        <div class="stat-value">{{ award_count }}</div>
-        <div class="stat-label">奖项&证书</div>
+        <div class="stat-icon">👤</div>
+        <div class="stat-value" id="statUniqueIPs">--</div>
+        <div class="stat-label">独立访客 IP</div>
     </div>
 </div>
-<div class="quick-actions">
-    <a href="/admin/projects/new" class="btn btn-primary">+ 新建项目</a>
-    <a href="/admin/blogs/new" class="btn btn-outline">+ 写博客</a>
-    <a href="/admin/awards/new" class="btn btn-outline">+ 添加奖项</a>
-    <a href="/" class="btn btn-outline" target="_blank">🌐 查看网站</a>
+
+<!-- 图表行 -->
+<div class="charts-row">
+    <div class="chart-panel">
+        <h3 class="chart-title">📈 近 7 天 PV 趋势</h3>
+        <canvas id="pvTrendChart"></canvas>
+    </div>
+    <div class="chart-panel">
+        <h3 class="chart-title">🏆 热门页面 TOP 10</h3>
+        <canvas id="topPagesChart"></canvas>
+    </div>
 </div>
+
+<!-- 时段分布 -->
+<div class="chart-panel chart-wide">
+    <h3 class="chart-title">⏰ 今日时段分布</h3>
+    <canvas id="hourlyChart" height="80"></canvas>
+</div>
+
+<!-- 实时访问日志 -->
+<div class="chart-panel chart-wide">
+    <div class="chart-title-row">
+        <h3 class="chart-title">👁 最近访问日志 <span class="live-dot"></span></h3>
+        <span class="refresh-hint">每 30 秒自动刷新</span>
+    </div>
+    <div class="log-table-wrap">
+        <table class="log-table">
+            <thead>
+                <tr><th>日期</th><th>时间</th><th>页面</th><th>IP</th><th>来源</th></tr>
+            </thead>
+            <tbody id="recentLogsBody">
+                <tr><td colspan="5" class="log-empty">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="/static/js/dashboard.js"></script>
 {% endblock %}
